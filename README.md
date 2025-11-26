@@ -2,7 +2,7 @@
 
 - **MCU**: STM32F446 (bare‑metal, register access)
 - **Display**: ST7735 1.8" TFT (128x160) over SPI
-- **Library files**: `src/TFTST7735.h`, `src/TFTST7735.cpp`, `src/fonts.h`, `src/fonts.c`
+- **Library files**: `src/TFT_ST7735.h`, `src/TFT_ST7735.cpp`, `src/fonts.h`, `src/fonts.c`
 - **Example app**: `src/main_tst.cpp` (basic drawing demo)
 
 This README documents how to use the ST7735 driver: initialization, public API, parameters, return values, possible error conditions, and example usage. It also outlines a midterm project concept built on this driver.
