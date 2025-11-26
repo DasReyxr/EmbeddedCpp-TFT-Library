@@ -72,7 +72,10 @@
 #define ST7735_ROTATION (ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB)
 
 
-
+extern void config(void);
+extern void confRCC(void);
+extern void confGPIO(void);
+extern void confSPI(void);
 // ------- INITIALIZATION -----------
 /* D/CX = 0 => Command
     D/CX = 1 => Data*/
@@ -85,7 +88,18 @@
 // --- Screen ----
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 160
-// ---- Delays ----
+// ---- COLORS ----
+#define COLOR_BLACK   0x0000
+#define COLOR_WHITE   0xFFFF
+#define COLOR_RED     0xF800
+#define COLOR_CYAN    0x07ff
+#define COLOR_MAGENTA 0xF81F
+#define COLOR_GREEN   0x07E0
+#define COLOR_BLUE    0x001F
+#define COLOR_YELLOW  0xFFE0
+#define COLOR_PINK    0xFC18
+#define COLOR_PURPLE  0x8010
+#define COLOR_ORANGE  0xFD20
 
 
 
@@ -110,6 +124,7 @@ public:
 
     void FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 
+    void FillScreen(uint16_t color);
     virtual ~TFT_ST7735();
 
 private:
