@@ -120,24 +120,9 @@ int main() {
 
 ## Midterm Project Concept
 
-### Prototype: Simple UI Sensor Monitor
-- **Goal**: Build an MCU‑based user interface that reads a sensor (e.g., temperature via ADC or I2C), displays readings and status on the ST7735, and triggers actions (color change, threshold alert).
-- **Flow**:
-	- Initialize TFT with this driver.
-	- Initialize sensor peripheral (ADC/I2C/SPI depending on sensor).
-	- Periodically sample sensor; compute basic stats (min/max/avg).
-	- Display values and a color‑coded bar/rectangle.
-	- Optional: Buttons to change view; log to UART.
-
-### Project Files (deliverables)
-- Source code: sensor driver/peripheral setup, application loop, TFT rendering using this library.
-- Driver’s README: this document.
-- Project documentation: describe application behavior, test steps, limitations, and improvements.
-
 ### How to Test
 - Power the board, connect TFT per wiring above.
 - Flash the firmware. Verify startup screen and subsequent updates every sampling interval.
-- Simulate sensor changes (heat/cool for temp, vary input for analog) and observe color/status changes.
 
 ### Limitations
 - Uses polling; CPU is busy during large fills and string rendering.
@@ -151,15 +136,36 @@ int main() {
 - Support multiple rotations and offsets.
 - Double‑buffer drawing primitives; batch pixels.
 - Add drawing primitives: lines, circles, images (bitmaps).
-- Integrate a sensor abstraction and UI widgets.
 
-## Build & Run
-This project is designed for bare‑metal STM32F446 using an embedded toolchain. Example commands vary by setup; typical steps:
 
-```powershell
-# From your toolchain environment, build and flash
-# (replace with your Makefile or CMake targets)
-; # placeholder – integrate with your existing build system
-```
+## Included Midterm Project: Oscilloscope Demo
 
-If you want, I can add a minimal Makefile or CMakeLists configured for STM32F446 and your compiler setup.
+File: `src/main_osc.cpp`
+
+- **Purpose**: Demonstrate a functional prototype that reads an analog sensor via `ADC1` and plots the sampled waveform live on the ST7735, behaving like a simple oscilloscope.
+- **Initialization**:
+	- `conf_osc()` sets up HSE and PLL for higher system clock, configures `ADC1` on `PA0` (analog), starts continuous conversion.
+	- `Screen1.INIT_FN()` initializes the TFT.
+- **Operation**:
+	- Clears the drawing area, draws axes (X and Y) using `FillRectangle`.
+	- In the loop, reads `ADC1->DR`, scales the reading (`>>5`) to 7‑bit range for the 128‑pixel X axis.
+	- Increments a vertical index `iterative` as time; plots `DrawPixel(adc_val+3, iterative+3, COLOR_CYAN)`.
+	- When `iterative` reaches 145 rows, clears the area and restarts, creating a scrolling plot.
+
+### How to Test the Oscilloscope Demo
+- Wire a sensor or signal source to `PA0` (e.g., potentiometer between 3.3V and GND with wiper to `PA0`).
+- Connect the TFT per wiring section.
+- Build and flash the firmware that uses `main_osc.cpp` as the entry point.
+- Observe the cyan trace scrolling vertically; adjust the signal and see horizontal movement corresponding to amplitude.
+
+### Limitations (Oscilloscope Demo)
+- Sampling is continuous and untriggered; the vertical axis is time index, not scaled to real units.
+- No horizontal clipping or scaling beyond a simple right‑shift; signal mapping is coarse.
+- Screen clears every 145 rows; no buffer or persistence.
+- CPU performs polling for SPI; large draws are blocking.
+
+### Possible Improvements (Oscilloscope Demo)
+- Add triggers (rising edge) and horizontal/vertical scaling controls.
+- Implement SPI DMA for faster pixel plotting.
+- Add grid/labels and numerical readouts (min/max/mean).
+- Use a ring buffer to plot without full clears; add decimation.
