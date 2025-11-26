@@ -23,8 +23,12 @@ void confGPIO(void){
                   /*      CS    |     DC/X |    RESET */
     GPIOA->MODER |= (1<<(2*3))|(1<<(2*4))| (1<<(2*6));
     
-
+    // Set initial states
+    GPIOA->BSRR = (1 << (3));  // CS high (inactive)
+    GPIOA->BSRR = (1 << (4));  // DC high (data mode)
+    GPIOA->BSRR = (1 << 6);       // RST high (active)
 }
+
 
 
 void confSPI(void){
@@ -33,15 +37,19 @@ void confSPI(void){
 	
 	// Master mode
 	SPI1->CR1 |=(1<<2);//activamos modo maestro
-	
+
+
+    
 	// Software NSS management
 	SPI1->CR1 |=(1<<9);//ACTIVAMOS SS POR SOFTWARE SSM
 	SPI1->CR1 |=(1<<8);//ACTIVAMOS EL SS INTERNO PARA FORZAR UNA HABILITACIÓN EN EL MAESTRO SSI
-	//config the DFF
-    //SPI1->CR1 |=(1<<11);//habilitamos trama de 16 bits 
-	// Enable SPI
-	SPI1->CR1 |=(1<<6);//PRENDEMOS EL SPI
+	// Data frame format: 8-bit (not 16-bit as commented)
+
+    // Enable SPI
+    SPI1->CR1 |= (1<<6); // PRENDEMOS EL SPI
+
 }
+
 
 void config(void){
     confRCC();

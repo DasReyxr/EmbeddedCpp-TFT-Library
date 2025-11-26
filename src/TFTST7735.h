@@ -5,8 +5,8 @@
  *      Author: dasre
  */
  
-#ifndef INC_TFTST7735_H_
-#define INC_TFTST7735_H_
+#ifndef TFT_ST7735_H
+#define TFT_ST7735_H
 #include <stm32f446xx.h>
       
 #include <stdint.h>
@@ -14,143 +14,90 @@
 
 
 
-#define ST7735_NOP     0x00
-#define ST7735_SWRESET 0x01
-#define ST7735_RDDID   0x04
-#define ST7735_RDDST   0x09
+#define ST7735_NOP     0x0000
+#define ST7735_SWRESET 0x0001
+#define ST7735_RDDID   0x0004
+#define ST7735_RDDST   0x0009
 
-#define ST7735_SLPIN   0x10
-#define ST7735_SLPOUT  0x11
-#define ST7735_PTLON   0x12
-#define ST7735_NORON   0x13
+#define ST7735_SLPIN   0x0010
+#define ST7735_SLPOUT  0x0011
+#define ST7735_PTLON   0x0012
+#define ST7735_NORON   0x0013
 
-#define ST7735_INVOFF  0x20
-#define ST7735_INVON   0x21
-#define ST7735_GAMSET  0x26
-#define ST7735_DISPOFF 0x28
-#define ST7735_DISPON  0x29
-#define ST7735_CASET   0x2A
-#define ST7735_RASET   0x2B
-#define ST7735_RAMWR   0x2C
-#define ST7735_RAMRD   0x2E
+#define ST7735_INVOFF  0x0020
+#define ST7735_INVON   0x0021
+#define ST7735_GAMSET  0x0026
+#define ST7735_DISPOFF 0x0028
+#define ST7735_DISPON  0x0029
+#define ST7735_CASET   0x002A
+#define ST7735_RASET   0x002B
+#define ST7735_RAMWR   0x002C
+#define ST7735_RAMRD   0x002E
 
-#define ST7735_PTLAR   0x30
-#define ST7735_COLMOD  0x3A
-#define ST7735_MADCTL  0x36
+#define ST7735_PTLAR   0x0030
+#define ST7735_COLMOD  0x003A
+#define ST7735_MADCTL  0x0036
 
-#define ST7735_FRMCTR1 0xB1
-#define ST7735_FRMCTR2 0xB2
-#define ST7735_FRMCTR3 0xB3
-#define ST7735_INVCTR  0xB4
-#define ST7735_DISSET5 0xB6
+#define ST7735_FRMCTR1 0x00B1
+#define ST7735_FRMCTR2 0x00B2
+#define ST7735_FRMCTR3 0x00B3
+#define ST7735_INVCTR  0x00B4
+#define ST7735_DISSET5 0x00B6
 
-#define ST7735_PWCTR1  0xC0
-#define ST7735_PWCTR2  0xC1
-#define ST7735_PWCTR3  0xC2
-#define ST7735_PWCTR4  0xC3
-#define ST7735_PWCTR5  0xC4
-#define ST7735_VMCTR1  0xC5
+#define ST7735_PWCTR1  0x00C0
+#define ST7735_PWCTR2  0x00C1
+#define ST7735_PWCTR3  0x00C2
+#define ST7735_PWCTR4  0x00C3
+#define ST7735_PWCTR5  0x00C4
+#define ST7735_VMCTR1  0x00C5
 
-#define ST7735_RDID1   0xDA
-#define ST7735_RDID2   0xDB
-#define ST7735_RDID3   0xDC
-#define ST7735_RDID4   0xDD
+#define ST7735_RDID1   0x00DA
+#define ST7735_RDID2   0x00DB
+#define ST7735_RDID3   0x00DC
+#define ST7735_RDID4   0x00DD
 
-#define ST7735_PWCTR6  0xFC
+#define ST7735_PWCTR6  0x00FC
 
-#define ST7735_GMCTRP1 0xE0
-#define ST7735_GMCTRN1 0xE1
+#define ST7735_GMCTRP1 0x00E0
+#define ST7735_GMCTRN1 0x00E1
 
-#define ST7735_MADCTL_MY  0x80
-#define ST7735_MADCTL_MX  0x40
-#define ST7735_MADCTL_MV  0x20
-#define ST7735_MADCTL_ML  0x10
-#define ST7735_MADCTL_RGB 0x00
-#define ST7735_MADCTL_BGR 0x08
-#define ST7735_MADCTL_MH  0x04
+#define ST7735_MADCTL_MY  0x0080
+#define ST7735_MADCTL_MX  0x0040
+#define ST7735_MADCTL_MV  0x0020
+#define ST7735_MADCTL_ML  0x0010
+#define ST7735_MADCTL_RGB 0x0000
+#define ST7735_MADCTL_BGR 0x0008
+#define ST7735_MADCTL_MH  0x0004
 
 #define ST7735_ROTATION (ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB)
 
 
 
 // ------- INITIALIZATION -----------
-/* D/CX = 0 => Data
-    D/CX = 1 => Command*/
-#define DCX_DATA 0
-#define DCX_CMD  1
+/* D/CX = 0 => Command
+    D/CX = 1 => Data*/
+#define DCX_CMD  0
+#define DCX_DATA 1
 // ----- PINS -----
 #define PIN_CS   3
 #define PIN_DC   4
 #define PIN_RST  6
+// --- Screen ----
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT 160
 // ---- Delays ----
 
 
 
-#define sizeofinit 88
-uint8_t init_cmd {            // Init for 7735R, part 1 (red or green tab)
-    15,                       // 15 commands in list:
-    ST7735_SWRESET,     //  1: Software reset, 0 args, w/delay
-    ST7735_SLPOUT ,  //  2: Out of sleep mode, 0 args, w/delay
-    ST7735_FRMCTR1,  //  3: Frame rate ctrl - normal mode, 3 args:
-      0x01, 0x2C, 0x2D,       //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
-    ST7735_FRMCTR2,  //  4: Frame rate control - idle mode, 3 args:
-      0x01, 0x2C, 0x2D,       //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
-    ST7735_FRMCTR3,  //  5: Frame rate ctrl - partial mode, 6 args:
-      0x01, 0x2C, 0x2D,       //     Dot inversion mode
-      0x01, 0x2C, 0x2D,       //     Line inversion mode
-    ST7735_INVCTR ,  //  6: Display inversion ctrl, 1 arg, no delay:
-      0x07,                   //     No inversion
-    ST7735_PWCTR1 ,  //  7: Power control, 3 args, no delay:
-      0xA2,
-      0x02,                   //     -4.6V
-      0x84,                   //     AUTO mode
-    ST7735_PWCTR2 ,  //  8: Power control, 1 arg, no delay:
-      0xC5,                   //     VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
-    ST7735_PWCTR3 ,  //  9: Power control, 2 args, no delay:
-      0x0A,                   //     Opamp current small
-      0x00,                   //     Boost frequency
-    ST7735_PWCTR4 ,  // 10: Power control, 2 args, no delay:
-      0x8A,                   //     BCLK/2, Opamp current small & Medium low
-      0x2A,  
-    ST7735_PWCTR5 ,  // 11: Power control, 2 args, no delay:
-      0x8A, 0xEE,
-    ST7735_VMCTR1 ,  // 12: Power control, 1 arg, no delay:
-      0x0E,
-    ST7735_INVOFF ,  // 13: Don't invert display, no args, no delay
-    ST7735_MADCTL ,  // 14: Memory access control (directions), 1 arg:
-      ST7735_ROTATION,        //     row addr/col addr, bottom to top refresh
-    ST7735_COLMOD ,  // 15: set color mode, 1 arg, no delay:
-      0x05 ,                 //     16-bit color
+#define sizeofinit 87
 
-
-  ST7735_CASET  ,  //  1: Column addr set, 4 args, no delay:
-      0x00, 0x00,             //     XSTART = 0
-      0x00, 0x7F,             //     XEND = 127
-    ST7735_RASET  ,  //  2: Row addr set, 4 args, no delay:
-      0x00, 0x00,             //     XSTART = 0
-      0x00, 0x7F,            //     XEND = 127
-
-// Init for 7735R, part 3 (red or green tab)
-    //  4 commands in list:
-    ST7735_GMCTRP1, //  1: Gamma Adjustments (pos. polarity), 16 args, no delay:
-      0x02, 0x1c, 0x07, 0x12,
-      0x37, 0x32, 0x29, 0x2d,
-      0x29, 0x25, 0x2B, 0x39,
-      0x00, 0x01, 0x03, 0x10,
-    ST7735_GMCTRN1, //  2: Gamma Adjustments (neg. polarity), 16 args, no delay:
-      0x03, 0x1d, 0x07, 0x06,
-      0x2E, 0x2C, 0x29, 0x2D,
-      0x2E, 0x2E, 0x37, 0x3F,
-      0x00, 0x00, 0x02, 0x10,
-    ST7735_NORON  , //  3: Normal display on, no args, w/delay
-    ST7735_DISPON , //  4: Main screen turn on, no args w/delay
-    };
-
+/*
+*/
 class TFT_ST7735 {
 public:
     TFT_ST7735();
 
-    void INIT(void);
+    void INIT_FN(void);
     void DrawPixel(uint16_t, uint16_t, uint16_t);
 
     void WriteChar(uint16_t, uint16_t, char, FontDef,
@@ -161,6 +108,8 @@ public:
 
     void WriteData(uint8_t* data, uint16_t size);
 
+    void FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+
     virtual ~TFT_ST7735();
 
 private:
@@ -170,9 +119,10 @@ private:
     void rstSet(uint8_t);
     void delay_ms(volatile uint32_t);   
     // ----- Communication Functions -----
-    void spiWrite(uint8_t*, uint16_t);
-    void WriteCommand(uint8_t*, uint16_t);
+    void spiWrite(uint16_t*, uint16_t);
+    void WriteCommand(uint16_t*, uint16_t);
     // ----- Overloaded Functions -----
+    void spiWrite(uint8_t*, uint16_t);
     void spiWrite(uint8_t);
     void WriteCommand(uint8_t);
 
