@@ -1,0 +1,164 @@
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}% Math and Physical Sciences Numbered
+
+\input{generalconfig.tex}
+
+\begin{document}
+
+\title[Article Title]{TFT Screen Library ST7735 (SPI Version)}
+
+\author*[1,2]{\fnm{Contreras R} \sur{Orlando}}\email{\{al348390,al464376\}@edu.uaa.mx}
+\author*[1,2]{\fnm{Lara H} \sur{Kevin}}
+
+\affil[3]{\orgdiv{Department of Electronic Systems}, \orgname{UAA}, \orgaddress{\street{Av. Universidad 940}, \city{Aguascalientes}, \postcode{20131}, \state{Aguascalientes}, \country{México}}}
+
+%%==================================%%
+%% Sample for unstructured abstract %%
+%%==================================%%
+
+\abstract{The objective of this TFT$\_$LCD screen driver is implement an easy way to show info on a screen. This is very useful in embedded systems applications, like show images, text, or anything that requires a screen.}
+%% me dices si ocupas ayuda con algo ire a desyunar oki probecho
+%%================================%%
+%% Sample for structured abstract %%
+%%================================%%
+
+\keywords{ARM, C++, Driver, TFT Screen.}
+
+%%\pacs[JEL Classification]{D8, H51}
+
+%%\pacs[MSC Classification]{35A01, 65L10, 65L12, 65L20, 65L70}
+
+\maketitle
+
+
+\section{Introduction}\label{sec1}
+Communication protocols are very useful in a lot of tech applications; all computers, micro controllers, and every circuit with a processor need communication protocols to send or receive I/O data and control external peripherals, some of the most used protocols are SPI. Using this application, the ST7735 TFT screen is a device able to print pixels on a point-matrix, sending via SPI the column and row address to set the internal screen pointer on the pixel that we want to turn on, subsequently we send the color data of this pixel in the color format RGB565.  
+
+
+
+\section{Description}
+The library for the ST7735-based TFT display provides a simple and efficient interface for handling graphics through the SPI communication protocol. 
+
+This library abstracts the complexity of the command sequences and internal operation of the ST7735, offering intuitive functions to initialize the display, print color rectangles,fill the creen with one color, draw pixels, and test the colors on the screen, each one integrated on a 4 simple function to use:
+
+Screen1.FillScreen(color).
+
+Screen1.FillRectangle(posx, posy, width, height, color).
+
+Screen1.DrawPixel(posyx, posy, color).
+
+test(void);
+
+\section{Purpose}
+This library aims to support rapid development of visual interfaces, diagnostic screens, and real-time graphical outputs, offering a set of functions optimized for performance and compatibility with a wide range of microcontrollers. It is designed to serve both beginners and advanced users who require a practical and flexible tool to integrate TFT graphics into their projects.
+
+\section{How to use properly}
+This section explains how to integrate and use the ST7735 TFT driver and the oscilloscope demo on an STM32F446 MCU.
+
+\subsection{Driver Initialization}
+\begin{enumerate}
+    \item Instantiate the driver object (constructor calls low-level \texttt{config()} for RCC/GPIO/SPI).
+    \item Call \texttt{INIT\_FN()} once after reset to send the ST7735 init sequence.
+    \item Clear or paint the screen using \texttt{FillScreen(color)}.
+\end{enumerate}
+Example:
+\begin{verbatim}
+TFT_ST7735 tft;
+tft.INIT_FN();
+tft.FillScreen(COLOR_BLACK);
+\end{verbatim}
+
+\subsection{Drawing Primitives}
+\begin{itemize}
+    \item Pixel: \verb|DrawPixel(x, y, color)|
+    \item Rectangle: \verb|FillRectangle(x, y, w, h, color)| (auto clipping)
+    \item Full screen: \verb|FillScreen(color)|
+    \item Text: \verb|WriteChar(x, y, ch, font, fg, bg)| and \verb|WriteString(x, y, str, font, fg, bg)|
+\end{itemize}
+Colors use RGB565; predefined constants (\verb|COLOR_RED|, \verb|COLOR_BLUE|, etc.) live in the header.
+
+\subsection{Oscilloscope Demo Flow}
+Provided in \texttt{main\_osc.cpp}:
+\begin{enumerate}
+    \item Configure PLL and system clock via \texttt{conf\_osc()}.
+    \item Enable and start continuous conversion on ADC1 channel at \texttt{PA0}.
+    \item Initialize TFT and draw axes using rectangles.
+    \item In loop: read \verb|ADC1->DR|, scale value (\verb|>>5|) to horizontal pixel range, increment vertical time index, plot with \verb|DrawPixel()|.
+    \item When vertical index reaches bottom, clear plot region and restart for a scrolling effect.
+\end{enumerate}
+
+\subsection{Build Notes}
+The code uses bare-metal register access (no HAL). Ensure your linker script and startup file match STM32F446. SPI baud is set to fPCLK/16. If the display shows nothing, verify wiring and that HSE/PLL configuration succeeds.
+
+\subsection{Testing}
+\begin{enumerate}
+    \item Power the board and TFT (3.3V only).
+    \item Flash firmware containing either \texttt{main\_tst.cpp} (color test) or \texttt{main\_osc.cpp} (oscilloscope).
+    \item For oscilloscope: vary the analog input on PA0 (potentiometer or waveform source) and observe horizontal deflection of the cyan trace.
+\end{enumerate}
+
+
+\section{Diagram}
+In the figure \ref{fig:sq} the test circuit with the test code printing multiple rectangles, notice that the connections are in the table \ref{tab:con}.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Embedded//src/Esquematico.png}
+    \caption{Schematic}
+    \label{fig:sq}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline TFT Pin & STM32F446 Pin & Purpose \\
+\hline VCC & 3.3V & Power \\
+GND & GND & Ground \\
+SCK & PA5 & SPI1 SCK (AF5) \\
+MOSI & PA7 & SPI1 MOSI (AF5) \\
+CS & PA3 & Chip Select (GPIO) \\
+DC & PA4 & Data/Command select (GPIO) \\
+RST & PA6 & Hardware reset (GPIO) \\
+\hline
+\label{tab:con}
+\caption{Connections}
+\end{tabular}
+\end{center}
+Optional: connect a variable analog signal (e.g. potentiometer wiper) to \texttt{PA0} for the oscilloscope demo (ADC input).
+
+\section{Limitations and Enhancements}
+\subsection{Current Limitations}
+\begin{itemize}
+    \item \textbf{Polling SPI}: All transfers busy-wait; CPU cannot perform other tasks concurrently.
+    \item \textbf{No DMA}: Large area fills and waveform plotting are slower than possible; higher CPU usage.
+    \item \textbf{Fixed Rotation}: Only one memory access orientation initialized; no runtime rotation switching.
+    \item \textbf{Limited Primitives}: Lines, circles, bitmaps, and sprites are not yet implemented.
+    \item \textbf{No Text Clipping}: Long strings may draw off-screen without wrapping or truncation.
+    \item \textbf{Oscilloscope Scaling}: Simple right-shift scaling (\verb|>>5|) reduces resolution; no trigger or persistence.
+    \item \textbf{Blocking Clear}: Screen clear for oscilloscope resets full plot; no partial scrolling buffer.
+\end{itemize}
+
+\subsection{Potential Enhancements}
+\begin{itemize}
+    \item \textbf{SPI DMA + Interrupts}: Offload pixel bursts; increase frame throughput.
+    \item \textbf{Drawing Toolkit}: Add line (Bresenham), circle (Midpoint), bitmap blitting, and gradient fills.
+    \item \textbf{Runtime Rotation}: Implement MADCTL updates with offset correction and cached clipping.
+    \item \textbf{Text System}: Clipping region, wrapping, proportional fonts, and transparency support.
+    \item \textbf{Waveform Features}: Trigger modes (edge/level), adjustable vertical/horizontal scaling, persistence with ring buffer.
+    \item \textbf{Double Buffering}: Compose frames off-screen then push for flicker-free updates.
+    \item \textbf{UI Layer}: Basic widgets (labels, value bars, status icons) for sensor dashboards.
+    \item \textbf{Color/Theme Profiles}: Map amplitude ranges to color gradients (heatmap visualization).
+\end{itemize}
+
+\subsection{Recommended Next Steps}
+Prioritize DMA integration and trigger logic for oscilloscope, then expand primitive set and text handling to support richer UI applications (data logger, multi-channel monitor).
+
+ 
+\begin{itemize}
+\item Configure SPI in master (one board) and slave (other board) mode. 
+\item Configure UART on both boards for terminal output text (Putty etc). 
+\item Define and use two control commands over SPI: start and finish. 
+\item Implement the count logic (0-9) on the slave, and delay/loop logic on the master. 
+\item Print meaningful messages via UART and maintain a cycle counter on the slave
+
+  \end{itemize}
+
+\end{document}
