@@ -12,7 +12,7 @@ This README documents how to use the ST7735 driver: initialization, public API, 
 	- `PA5` → `SCK`
 	- `PA7` → `MOSI`
 	- `PA3` → `CS`
-	- `PA4` → `DC`
+	- `PA4` → `DC/A0`
 	- `PA6` → `RST`
 	- `VCC/GND` per display datasheet
 - **Clocking**: SPI1 runs at ~1 MHz (`BR=011` → fPCLK/16). Adjust in `confSPI()` if needed.
