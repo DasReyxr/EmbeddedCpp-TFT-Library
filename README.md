@@ -10,7 +10,7 @@ This README documents how to use the ST7735 driver: initialization, public API, 
 ## Getting Started
 - **Wiring (STM32F446 → TFT)**
 	- `PA5` → `SCK`
-	- `PA7` → `MOSI`
+	- `PA7` → `MOSI/SDA`
 	- `PA3` → `CS`
 	- `PA4` → `DC/A0`
 	- `PA6` → `RST`
