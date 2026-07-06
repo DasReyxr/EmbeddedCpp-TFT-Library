@@ -98,8 +98,11 @@ uint16_t init_cmd[]= {            // Init for 7735R, part 1 (red or green
  
 */
 
-
-
+/*----------- Static Functions -----------*/
+static inline void gpioWrite(const GpioPin *gpio, uint8_t state);
+static inline void modeSel(uint8_t data);
+static inline void csSet(uint8_t high);
+static inline void rstSet(uint8_t high);
 
 /*----------- Public Functions -----------*/
 
@@ -218,30 +221,33 @@ void Screen_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font,
 
 
 /*----------- Private Functions -----------*/
-void modeSel(uint8_t cmd){
+static inline void gpioWrite(const GpioPin *gpio, uint8_t state)
+{
+    if(state)
+        gpio->port->BSRR = gpio->pin;
+    else
+        gpio->port->BSRR = (uint32_t)gpio->pin << 16;
+}
+
+static inline void modeSel(uint8_t data)
+{
 
     /* D/CX = 0 => Data (DC LOW)
        D/CX = 1 => Command (DC HIGH)*/
-    if (cmd)
-        GPIOA->BSRR = (1 << PIN_DC);      // Set DC HIGH for command
-    else
-        GPIOA->BSRR = (1 << (PIN_DC+16)); // Set DC LOW for data
+
+    gpioWrite(&ScreenDC, data);
 }
 
-void csSet(uint8_t csEn){
+static inline void csSet(uint8_t high)
+{
     /* CS LOW to select, CS HIGH to deselect */
-    if (csEn)
-        GPIOA->BSRR = (1 << PIN_CS);      // Set CS HIGH (deselect)
-    else
-        GPIOA->BSRR = (1 << (PIN_CS+16)); // Set CS LOW (select)
+    gpioWrite(&ScreenCS, high);
 }
 
-void rstSet(uint8_t rstEn){
-    /* RST HIGH for normal, RST LOW for reset */
-    if (rstEn)
-        GPIOA->BSRR = (1 << PIN_RST);     // Set RST HIGH (normal operation)
-    else
-        GPIOA->BSRR = (1 << (PIN_RST+16));// Set RST LOW (reset)
+static inline void rstSet(uint8_t high)
+{
+    // RST LOW to reset, RST HIGH for normal operation
+    gpioWrite(&ScreenRST, high);
 }
 
 

@@ -16,12 +16,22 @@
 #define SCREEN_SPI_PORT hspi1
 extern SPI_HandleTypeDef SCREEN_SPI_PORT;
 
-#define SCREEN_CS_Pin        GPIO_PIN_2
-#define SCREEN_CS_Port       GPIOA
-#define SCREEN_RES_Pin       GPIO_PIN_3
-#define SCREEN_RES_Port      GPIOA
-#define SCREEN_DC_Pin        GPIO_PIN_4
-#define SCREEN_DC_Port       GPIOA
+typedef struct{
+    GPIO_TypeDef *port;
+    uint16_t pin;
+} GpioPin;
+
+static const GpioPin ScreenCS = {
+    .port = GPIOA, .pin  = GPIO_PIN_2
+};
+
+static const GpioPin ScreenDC = {
+    .port = GPIOA, .pin  = GPIO_PIN_4
+};
+
+static const GpioPin ScreenRST = {
+    .port = GPIOA, .pin  = GPIO_PIN_3
+};
 
 // ----- PINS -----
 #define PIN_CS   2
@@ -134,9 +144,6 @@ void Screen_FillScreen(uint16_t color);
 
 
 // ----- Hardware Functions -----
-void modeSel(uint8_t);
-void csSet(uint8_t);
-void rstSet(uint8_t);
 void delay_ms(volatile uint32_t);   
 // ----- Communication Functions -----
 void spiWrite(uint16_t*, uint16_t);

@@ -102,7 +102,7 @@ int main(void)
 	Screen_FillRectangle(2+15*6, 2+15*6, 15, 15, COLOR_BLUE);
 	Screen_FillRectangle(2+15*7, 2+15*7, 15, 15, COLOR_YELLOW);
 	Screen_FillRectangle(2+15*8, 2+15*8, 15, 15, COLOR_PINK);
-	
+	Screen_WriteString(2, 2+15*9, "Hello!", Font_11x18, COLOR_WHITE, COLOR_PURPLE);
 	Screen_DrawPixel(10,10,COLOR_PINK);
 
   /* USER CODE END 2 */
