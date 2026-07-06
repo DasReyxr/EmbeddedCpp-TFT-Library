@@ -24,6 +24,19 @@ set(CMAKE_PROJECT_NAME ScreenDriver)
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
+
+# Collect user sources (glob Core/Src, re-scanned on reconfigure)
+file(GLOB USER_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c
+)
+
+
+# system_stm32f4xx.c ya lo compila el target STM32_Drivers generado
+# en cmake/stm32cubemx/CMakeLists.txt — excluirlo aquí evita el
+# "multiple definition" al enlazar
+list(REMOVE_ITEM USER_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/system_stm32f4xx.c
+)
 # Core project settings
 project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
@@ -44,8 +57,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+    ${USER_SOURCES}
 )
+
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE

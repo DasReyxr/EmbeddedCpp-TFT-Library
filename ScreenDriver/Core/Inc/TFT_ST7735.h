@@ -7,11 +7,26 @@
  
 #ifndef TFT_ST7735_H
 #define TFT_ST7735_H
-#include <stm32f446xx.h>
+#include "stm32f4xx.h"
       
 #include <stdint.h>
 #include "fonts.h"  // Assuming FontDef lives here
 
+
+#define SCREEN_SPI_PORT hspi1
+extern SPI_HandleTypeDef SCREEN_SPI_PORT;
+
+#define SCREEN_CS_Pin        GPIO_PIN_2
+#define SCREEN_CS_Port       GPIOA
+#define SCREEN_RES_Pin       GPIO_PIN_3
+#define SCREEN_RES_Port      GPIOA
+#define SCREEN_DC_Pin        GPIO_PIN_4
+#define SCREEN_DC_Port       GPIOA
+
+// ----- PINS -----
+#define PIN_CS   2
+#define PIN_RST  3
+#define PIN_DC   4
 
 
 #define ST7735_NOP     0x0000
@@ -81,10 +96,6 @@ extern void confSPI(void);
     D/CX = 1 => Data*/
 #define DCX_CMD  0
 #define DCX_DATA 1
-// ----- PINS -----
-#define PIN_CS   3
-#define PIN_DC   4
-#define PIN_RST  6
 // --- Screen ----
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 160
@@ -105,44 +116,38 @@ extern void confSPI(void);
 
 #define sizeofinit 87
 
-/*
-*/
-class TFT_ST7735 {
-public:
-    TFT_ST7735();
+void Screen_Init(void);
+void Screen_DrawPixel(uint16_t, uint16_t, uint16_t);
 
-    void INIT_FN(void);
-    void DrawPixel(uint16_t, uint16_t, uint16_t);
+void Screen_WriteChar(uint16_t, uint16_t, char, FontDef,
+                uint16_t, uint16_t);
 
-    void WriteChar(uint16_t, uint16_t, char, FontDef,
-                   uint16_t, uint16_t);
+void Screen_WriteString(uint16_t, uint16_t, const char*, FontDef,
+                    uint16_t, uint16_t);
 
-    void WriteString(uint16_t, uint16_t, const char*, FontDef,
-                     uint16_t, uint16_t);
+void Screen_WriteData(uint8_t* data, uint16_t size);
 
-    void WriteData(uint8_t* data, uint16_t size);
+void Screen_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 
-    void FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void Screen_FillScreen(uint16_t color);
 
-    void FillScreen(uint16_t color);
-    virtual ~TFT_ST7735();
 
-private:
-    // ----- Hardware Functions -----
-    void modeSel(uint8_t);
-    void csSet(uint8_t);
-    void rstSet(uint8_t);
-    void delay_ms(volatile uint32_t);   
-    // ----- Communication Functions -----
-    void spiWrite(uint16_t*, uint16_t);
-    void WriteCommand(uint16_t*, uint16_t);
-    // ----- Overloaded Functions -----
-    void spiWrite(uint8_t*, uint16_t);
-    void spiWrite(uint8_t);
-    void WriteCommand(uint8_t);
 
-    void SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-};
+// ----- Hardware Functions -----
+void modeSel(uint8_t);
+void csSet(uint8_t);
+void rstSet(uint8_t);
+void delay_ms(volatile uint32_t);   
+// ----- Communication Functions -----
+void spiWrite(uint16_t*, uint16_t);
+void WriteCommand(uint16_t*, uint16_t);
+// ----- Overloaded Functions -----
+void spiWrite_8b_Vector(uint8_t*, uint16_t);
+void spiWrite_8b(uint8_t);
+void WriteCommand_8b(uint8_t);
+
+void SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+
 
 
 

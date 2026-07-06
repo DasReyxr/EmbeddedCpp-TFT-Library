@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "TFT_ST7735.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,7 +67,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,7 +88,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  __HAL_SPI_ENABLE(&hspi1);
+
   /* USER CODE BEGIN 2 */
+  Screen_Init();
+
+  Screen_FillScreen(COLOR_PURPLE);
+	Screen_FillRectangle(2+15*0, 2+15*0, 15, 15, COLOR_PURPLE);
+	Screen_FillRectangle(2+15*1, 2+15*1, 15, 15, COLOR_BLACK);
+	Screen_FillRectangle(2+15*2, 2+15*2, 15, 15, COLOR_RED);
+	Screen_FillRectangle(2+15*3, 2+15*3, 15, 15, COLOR_CYAN);
+	Screen_FillRectangle(2+15*4, 2+15*4, 15, 15, COLOR_MAGENTA);
+	Screen_FillRectangle(2+15*6, 2+15*6, 15, 15, COLOR_BLUE);
+	Screen_FillRectangle(2+15*7, 2+15*7, 15, 15, COLOR_YELLOW);
+	Screen_FillRectangle(2+15*8, 2+15*8, 15, 15, COLOR_PINK);
+	
+	Screen_DrawPixel(10,10,COLOR_PINK);
 
   /* USER CODE END 2 */
 

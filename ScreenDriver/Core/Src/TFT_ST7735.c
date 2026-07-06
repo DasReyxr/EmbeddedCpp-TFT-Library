@@ -98,21 +98,127 @@ uint16_t init_cmd[]= {            // Init for 7735R, part 1 (red or green
  
 */
 
-TFT_ST7735::TFT_ST7735() 
+
+
+
+/*----------- Public Functions -----------*/
+
+void Screen_Init(void) {
+    //config();
+    // HW reset
+    rstSet(0);
+    delay_ms(5);
+    rstSet(1);
+    delay_ms(50);
+
+    // Drive CS for the whole init sequence to avoid glitches
+    csSet(0);
+    WriteCommand(init_cmd,sizeofinit);
+    csSet(1);
+
+}
+
+
+void Screen_WriteData(uint8_t* data, uint16_t size) {
+    // Leave CS control to the caller. Set DC for data then write buffer.
+    modeSel(DCX_DATA);
+    spiWrite_8b_Vector(data, size);
+}
+
+
+void SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+
+    WriteCommand_8b(0x2A); // CASET (Column Address Set)
+    uint8_t data[] = { x0 >> 8, x0 & 0xFF, x1 >> 8, x1 & 0xFF };
+    Screen_WriteData(data, 4);
+
+    WriteCommand_8b(0x2B); // RASET (Row Address Set)
+    data[0] = y0 >> 8; data[1] = y0 & 0xFF;
+    data[2] = y1 >> 8; data[3] = y1 & 0xFF;
+    Screen_WriteData(data, 4);
+
+    WriteCommand_8b(0x2C); // RAMWR (start writing pixels)
+}
+
+
+void Screen_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
+    // clipping
+    if((x >= SCREEN_WIDTH) || (y >= SCREEN_HEIGHT)) return;
+    if((x + w - 1) >= SCREEN_WIDTH ) w = SCREEN_WIDTH  - x;
+    if((y + h - 1) >= SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
+
+    csSet(0);
+    SetAddressWindow(x, y, x+w-1, y+h-1);
+    
+    uint8_t hi = color >> 8;
+    uint8_t lo = color & 0xFF;
+    modeSel(DCX_DATA);
+    
+    uint32_t totalPixels = (uint32_t)w * (uint32_t)h;
+    for(uint32_t i = 0; i < totalPixels; i++) {
+        while(!(SPI1->SR & SPI_SR_TXE));
+        spiWrite_8b(hi);
+        spiWrite_8b(lo);
+    }
+    
+    while(SPI1->SR & SPI_SR_BSY);  // Wait for last transmission to complete
+    csSet(1);
+}
+
+void Screen_FillScreen(uint16_t color) {
+    Screen_FillRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color);
+}
+
+void Screen_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
+    // Ensure CS is held low while setting window and writing pixel data
+    csSet(0);
+    SetAddressWindow(x, y, x+1, y+1);
+
+    uint8_t buf[2];
+    buf[0] = color >> 8;
+    buf[1] = color & 0xFF;
+
+    modeSel(DCX_DATA);
+    spiWrite_8b(buf[0]);
+    spiWrite_8b(buf[1]);
+    csSet(1);
+}
+
+void Screen_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font,
+                           uint16_t color, uint16_t bgcolor)
 {
-    config();
+    uint32_t i, b, j;
+
+    uint16_t w = font.width;
+    uint16_t h = font.height;
+
+    for (i = 0; i < h; i++) {
+        b = font.data[(ch - 32) * h + i];
+        for (j = 0; j < w; j++) {
+            if (b & (1 << (w - j - 1))) {
+                Screen_DrawPixel(x + j, y + i, color);
+            } else {
+                Screen_DrawPixel(x + j, y + i, bgcolor);
+            }
+        }
+    }
 }
 
-TFT_ST7735::~TFT_ST7735() {
+void Screen_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font,
+                             uint16_t color, uint16_t bgcolor)
+{
+    while (*str) {
+        Screen_WriteChar(x, y, *str, font, color, bgcolor);
+        x += font.width;
+        str++;
+    }
 }
+
+
+
+
 /*----------- Private Functions -----------*/
-void TFT_ST7735::delay_ms(volatile uint32_t ms){
-	while(ms--){
-		for(volatile uint32_t i =0; i<6000;i++){
-		}}
-}
-
-void TFT_ST7735::modeSel(uint8_t cmd){
+void modeSel(uint8_t cmd){
 
     /* D/CX = 0 => Data (DC LOW)
        D/CX = 1 => Command (DC HIGH)*/
@@ -122,7 +228,7 @@ void TFT_ST7735::modeSel(uint8_t cmd){
         GPIOA->BSRR = (1 << (PIN_DC+16)); // Set DC LOW for data
 }
 
-void TFT_ST7735::csSet(uint8_t csEn){
+void csSet(uint8_t csEn){
     /* CS LOW to select, CS HIGH to deselect */
     if (csEn)
         GPIOA->BSRR = (1 << PIN_CS);      // Set CS HIGH (deselect)
@@ -130,7 +236,7 @@ void TFT_ST7735::csSet(uint8_t csEn){
         GPIOA->BSRR = (1 << (PIN_CS+16)); // Set CS LOW (select)
 }
 
-void TFT_ST7735::rstSet(uint8_t rstEn){
+void rstSet(uint8_t rstEn){
     /* RST HIGH for normal, RST LOW for reset */
     if (rstEn)
         GPIOA->BSRR = (1 << PIN_RST);     // Set RST HIGH (normal operation)
@@ -139,7 +245,15 @@ void TFT_ST7735::rstSet(uint8_t rstEn){
 }
 
 
-void TFT_ST7735::spiWrite(uint16_t* DATA, uint16_t size){
+void delay_ms(volatile uint32_t ms){
+	while(ms--){
+		for(volatile uint32_t i =0; i<6000;i++){
+		}}
+}
+
+
+
+void spiWrite(uint16_t* DATA, uint16_t size){
     uint16_t sent = 0;
     while(sent<size){
 
@@ -176,7 +290,7 @@ void TFT_ST7735::spiWrite(uint16_t* DATA, uint16_t size){
 
 }
 
-void TFT_ST7735::spiWrite(uint8_t* DATA, uint16_t size){
+void spiWrite_8b_Vector(uint8_t* DATA, uint16_t size){
     for(uint16_t i = 0; i < size; i++){
         while(!(SPI1->SR & SPI_SR_TXE));
         SPI1->DR = DATA[i];
@@ -184,134 +298,22 @@ void TFT_ST7735::spiWrite(uint8_t* DATA, uint16_t size){
     while(SPI1->SR & SPI_SR_BSY);  // Wait for last byte to complete
 }
 
-void TFT_ST7735::spiWrite(uint8_t DATA){
+void spiWrite_8b(uint8_t DATA){
     while(!(SPI1->SR & SPI_SR_TXE));
     SPI1->DR = DATA;
     while(SPI1->SR & SPI_SR_BSY);
 }
 
-/*----------- Public Functions -----------*/
-
-void TFT_ST7735::WriteCommand(uint16_t* cmd, uint16_t size) {
+void WriteCommand(uint16_t* cmd, uint16_t size) {
     spiWrite(cmd, size);
 }
 
 
 
-void TFT_ST7735::WriteCommand(uint8_t cmd) {
+void WriteCommand_8b(uint8_t cmd) {
     // Leave CS control to the caller. Set DC for command then write byte.
     modeSel(DCX_CMD);
-    spiWrite(cmd);
-}
-
-
-void TFT_ST7735::WriteData(uint8_t* data, uint16_t size) {
-    // Leave CS control to the caller. Set DC for data then write buffer.
-    modeSel(DCX_DATA);
-    spiWrite(data, size);
-}
-
-void TFT_ST7735::INIT_FN(void) {
-    // HW reset
-    rstSet(false);
-    delay_ms(5);
-    rstSet(true);
-    delay_ms(50);
-
-    // Drive CS for the whole init sequence to avoid glitches
-    csSet(false);
-    WriteCommand(init_cmd,sizeofinit);
-    csSet(true);
-
-}
-
-
-void TFT_ST7735::SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-
-    WriteCommand(0x2A); // CASET (Column Address Set)
-    uint8_t data[] = { x0 >> 8, x0 & 0xFF, x1 >> 8, x1 & 0xFF };
-    WriteData(data, 4);
-
-    WriteCommand(0x2B); // RASET (Row Address Set)
-    data[0] = y0 >> 8; data[1] = y0 & 0xFF;
-    data[2] = y1 >> 8; data[3] = y1 & 0xFF;
-    WriteData(data, 4);
-
-    WriteCommand(0x2C); // RAMWR (start writing pixels)
-}
-
-
-void TFT_ST7735::FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
-    // clipping
-    if((x >= SCREEN_WIDTH) || (y >= SCREEN_HEIGHT)) return;
-    if((x + w - 1) >= SCREEN_WIDTH ) w = SCREEN_WIDTH  - x;
-    if((y + h - 1) >= SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
-
-    csSet(false);
-    SetAddressWindow(x, y, x+w-1, y+h-1);
-    
-    uint8_t hi = color >> 8;
-    uint8_t lo = color & 0xFF;
-    modeSel(DCX_DATA);
-    
-    uint32_t totalPixels = (uint32_t)w * (uint32_t)h;
-    for(uint32_t i = 0; i < totalPixels; i++) {
-        while(!(SPI1->SR & SPI_SR_TXE));
-        spiWrite(hi);
-        spiWrite(lo);
-    }
-    
-    while(SPI1->SR & SPI_SR_BSY);  // Wait for last transmission to complete
-    csSet(true);
-}
-
-void TFT_ST7735::FillScreen(uint16_t color) {
-    FillRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color);
-}
-
-void TFT_ST7735::DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
-    // Ensure CS is held low while setting window and writing pixel data
-    csSet(false);
-    SetAddressWindow(x, y, x+1, y+1);
-
-    uint8_t buf[2];
-    buf[0] = color >> 8;
-    buf[1] = color & 0xFF;
-
-    modeSel(DCX_DATA);
-    spiWrite(buf[0]);
-    spiWrite(buf[1]);
-    csSet(true);
-}
-
-void TFT_ST7735::WriteChar(uint16_t x, uint16_t y, char ch, FontDef font,
-                           uint16_t color, uint16_t bgcolor)
-{
-    uint32_t i, b, j;
-
-    uint16_t w = font.width;
-    uint16_t h = font.height;
-
-    for (i = 0; i < h; i++) {
-        b = font.data[(ch - 32) * h + i];
-        for (j = 0; j < w; j++) {
-            if (b & (1 << (w - j - 1))) {
-                DrawPixel(x + j, y + i, color);
-            } else {
-                DrawPixel(x + j, y + i, bgcolor);
-            }
-        }
-    }
-}
-
-void TFT_ST7735::WriteString(uint16_t x, uint16_t y, const char* str, FontDef font,
-                             uint16_t color, uint16_t bgcolor)
-{
-    while (*str) {
-        WriteChar(x, y, *str, font, color, bgcolor);
-        x += font.width;
-        str++;
-    }
+    spiWrite_8b(cmd);
 }
 
 
@@ -328,12 +330,12 @@ void confGPIO(void){
 	GPIOA->AFR[0]|= (5<<(4*5)| 5<<(4*7)); 
 	
                   /*      CS    |     DC/X |    RESET */
-    GPIOA->MODER |= (1<<(2*3))|(1<<(2*4))| (1<<(2*6));
+    GPIOA->MODER |= (1<<(2*2))|(1<<(2*3))| (1<<(2*4));
     
     // Set initial states
-    GPIOA->BSRR = (1 << (3));  // CS high (inactive)
-    GPIOA->BSRR = (1 << (4));  // DC high (data mode)
-    GPIOA->BSRR = (1 << 6);       // RST high (active)
+    GPIOA->BSRR = (1 << (2));  // CS high (inactive)
+    GPIOA->BSRR = (1 << (3));  // DC high (data mode)
+    GPIOA->BSRR = (1 << (4));  // RST high (active)
 }
 
 
