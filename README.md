@@ -9,14 +9,17 @@ This README documents how to use the ST7735 driver: initialization, public API, 
 
 ## Getting Started
 - **Wiring (STM32F446 → TFT)**
-	- `PA5` → `SCK`
-	- `PA7` → `MOSI/SDA`
-	- `PA3` → `CS`
+	- `PA2` → `CS`
+	- `PA3` → `RST`
 	- `PA4` → `DC/A0`
-	- `PA6` → `RST`
+	- `PA5` → `SCK`
+	- `PA6` → `MISO/SDO`
+	- `PA7` → `MOSI/SDA`
 	- `VCC/GND` per display datasheet
 - **Clocking**: SPI1 runs at ~1 MHz (`BR=011` → fPCLK/16). Adjust in `confSPI()` if needed.
 - **Screen geometry**: `SCREEN_WIDTH=128`, `SCREEN_HEIGHT=160`. Color format: RGB565 (16‑bit).
+
+<img width="455" height="426" alt="image" src="https://github.com/user-attachments/assets/02238954-98d0-43d0-8b1d-4c7b9a146606" />
 
 ## Initialization
 The constructor configures RCC, GPIO, and SPI via `config()`. Call `INIT_FN()` once to reset and send the full ST7735 init sequence.
@@ -34,7 +37,7 @@ int main() {
 
 ## Public API
 
-- `void INIT_FN()`
+- `void Init()`
 	- Initializes the TFT: hardware reset, sends init commands, sets color mode and addressing.
 	- Parameters: none
 	- Returns: none
