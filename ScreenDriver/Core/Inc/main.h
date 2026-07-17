@@ -57,12 +57,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ILI9341_CS_Pin GPIO_PIN_2
-#define ILI9341_CS_GPIO_Port GPIOA
-#define RST_Pin GPIO_PIN_3
-#define RST_GPIO_Port GPIOA
-#define D_C_Pin GPIO_PIN_4
-#define D_C_GPIO_Port GPIOA
+#define SCREEN_CS_Pin GPIO_PIN_2
+#define SCREEN_CS_GPIO_Port GPIOA
+#define SCREEN_RST_Pin GPIO_PIN_3
+#define SCREEN_RST_GPIO_Port GPIOA
+#define SCREEN_D_C_Pin GPIO_PIN_4
+#define SCREEN_D_C_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

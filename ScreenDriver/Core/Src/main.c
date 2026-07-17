@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "TFT_ST7735.h"
+#include "TFT_Screen.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,22 +88,23 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
-  __HAL_SPI_ENABLE(&hspi1);
-
   /* USER CODE BEGIN 2 */
+  __HAL_SPI_ENABLE(&hspi1);
   Screen_Init();
 
+  uint16_t sizeBox = SCREEN_WIDTH>SCREEN_HEIGHT ? SCREEN_HEIGHT / 10 : SCREEN_WIDTH / 10;
   Screen_FillScreen(COLOR_PURPLE);
-	Screen_FillRectangle(2+15*0, 2+15*0, 15, 15, COLOR_PURPLE);
-	Screen_FillRectangle(2+15*1, 2+15*1, 15, 15, COLOR_BLACK);
-	Screen_FillRectangle(2+15*2, 2+15*2, 15, 15, COLOR_RED);
-	Screen_FillRectangle(2+15*3, 2+15*3, 15, 15, COLOR_CYAN);
-	Screen_FillRectangle(2+15*4, 2+15*4, 15, 15, COLOR_MAGENTA);
-	Screen_FillRectangle(2+15*6, 2+15*6, 15, 15, COLOR_BLUE);
-	Screen_FillRectangle(2+15*7, 2+15*7, 15, 15, COLOR_YELLOW);
-	Screen_FillRectangle(2+15*8, 2+15*8, 15, 15, COLOR_PINK);
-	Screen_WriteString(2, 2+15*9, "Hello!", Font_11x18, COLOR_WHITE, COLOR_PURPLE);
-	Screen_DrawPixel(10,10,COLOR_PINK);
+  Screen_DrawCircle(sizeBox, SCREEN_HEIGHT-sizeBox, 2*sizeBox, COLOR_CYAN);
+  Screen_FillCircle(SCREEN_WIDTH-sizeBox, sizeBox, 2*sizeBox, COLOR_WHITE);
+
+  Screen_FillRectangle(2+sizeBox*1, 2+sizeBox*1, sizeBox, sizeBox, COLOR_BLACK);
+	Screen_FillRectangle(2+sizeBox*2, 2+sizeBox*2, sizeBox, sizeBox, COLOR_RED);
+	Screen_FillRectangle(2+sizeBox*3, 2+sizeBox*3, sizeBox, sizeBox, COLOR_CYAN);
+	Screen_FillRectangle(2+sizeBox*4, 2+sizeBox*4, sizeBox, sizeBox, COLOR_MAGENTA);
+	Screen_FillRectangle(2+sizeBox*6, 2+sizeBox*6, sizeBox, sizeBox, COLOR_BLUE);
+	Screen_FillRectangle(2+sizeBox*7, 2+sizeBox*7, sizeBox, sizeBox, COLOR_YELLOW);
+	Screen_FillRectangle(2+sizeBox*8, 2+sizeBox*8, sizeBox, sizeBox, COLOR_PINK);
+	Screen_WriteString(2, 2+sizeBox*9, "Hello!", Font_11x18, COLOR_WHITE, COLOR_PURPLE);
 
   /* USER CODE END 2 */
 
@@ -213,13 +214,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ILI9341_CS_GPIO_Port, ILI9341_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SCREEN_CS_GPIO_Port, SCREEN_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, RST_Pin|D_C_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SCREEN_RST_Pin|SCREEN_D_C_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : ILI9341_CS_Pin RST_Pin D_C_Pin */
-  GPIO_InitStruct.Pin = ILI9341_CS_Pin|RST_Pin|D_C_Pin;
+  /*Configure GPIO pins : SCREEN_CS_Pin SCREEN_RST_Pin SCREEN_D_C_Pin */
+  GPIO_InitStruct.Pin = SCREEN_CS_Pin|SCREEN_RST_Pin|SCREEN_D_C_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

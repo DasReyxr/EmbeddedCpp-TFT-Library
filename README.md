@@ -1,8 +1,8 @@
-# STM32F4 TFT ST7735 Driver and Demo
+# STM32F4 TFT Screen Driver and Demo
 
 - **MCU**: STM32F446 (bare‑metal, register access)
-- **Display**: ST7735 1.8" TFT (128x160) over SPI
-- **Library files**: `src/TFT_ST7735.h`, `src/TFT_ST7735.cpp`, `src/fonts.h`, `src/fonts.c`
+- **Display**: ST7735 1.8" TFT (128x160), ILI9341 3.2" TFT (320x240) over SPI
+- **Library files**: `src/TFT_Screen.h`, `src/TFT_Screen.cpp`, `src/fonts.h`, `src/fonts.c`
 - **Example app**: `src/main_tst.cpp` (basic drawing demo)
 
 This README documents how to use the ST7735 driver: initialization, public API, parameters, return values, possible error conditions, and example usage. It also outlines a midterm project concept built on this driver.
@@ -25,16 +25,20 @@ This README documents how to use the ST7735 driver: initialization, public API, 
 The constructor configures RCC, GPIO, and SPI via `config()`. Call `INIT_FN()` once to reset and send the full ST7735 init sequence.
 
 ```cpp
-#include "TFT_ST7735.h"
+#include "TFT_Screen.h"
 
 int main() {
-	TFT_ST7735 tft;
+	TFT_Screen tft;
 	tft.INIT_FN();
 	tft.FillScreen(COLOR_BLACK);
 	while (1) {}
 }
 ```
-
+## DEMO 
+Here are screenshots of the demo running on both ILI9341 and ST7735 displays:
+![ILI9341](src/README/image.png)
+![ST7735](src/README/image-1.png)
+You could switch between the two displays by changing the `#define` in `TFT_Screen.h` and recompiling.
 ## Public API
 
 - `void Init()`
@@ -96,10 +100,10 @@ extern FontDef Font_7x10, Font_11x18, Font_16x26;
 ## Example Usage
 Minimal demo similar to `main_tst.cpp`:
 ```cpp
-#include "TFT_ST7735.h"
+#include "TFT_Screen.h"
 
 int main() {
-	TFT_ST7735 tft;
+	TFT_Screen tft;
 	tft.INIT_FN();
 
 	tft.FillScreen(COLOR_WHITE);
