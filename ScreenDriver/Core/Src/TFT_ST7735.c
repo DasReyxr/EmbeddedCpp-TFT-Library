@@ -1,93 +1,5 @@
 #include "TFT_ST7735.h"
-uint16_t init_cmd[]= {            // Init for 7735R, part 1 (red or green  
-    ST7735_SWRESET,     //  1: Software reset, 0 args, w/delay
-    ST7735_SLPOUT ,  //  2: Out of sleep mode, 0 args, w/delay
-    ST7735_FRMCTR1,  //  3: Frame rate ctrl - normal mode, 3 args:
-    0x0101,
-    0x012C,
-    0x012D,       //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
-    ST7735_FRMCTR2,  //  4: Frame rate control - idle mode, 3 args:
-      0x0101, 
-      0x012C, 
-      0x012D,       //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
-    ST7735_FRMCTR3,  //  5: Frame rate ctrl - partial mode, 6 args:
-      0x0101, 
-      0x012C, 
-      0x012D,       //     Dot inversion mode
-      0x0101, 
-      0x012C, 
-      0x012D,       //     Line inversion mode
-    ST7735_INVCTR ,  //  6: Display inversion ctrl, 1 arg, no delay:
-      0x0107,                   //     No inversion
-    ST7735_PWCTR1 ,  //  7: Power control, 3 args, no delay:
-      0x01A2,
-      0x0102,                   //     -4.6V
-      0x0184,                   //     AUTO mode
-    ST7735_PWCTR2 ,  //  8: Power control, 1 arg, no delay:
-      0x01C5,                   //     VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
-    ST7735_PWCTR3 ,  //  9: Power control, 2 args, no delay:
-      0x010A,                   //     Opamp current small
-      0x0100,                   //     Boost frequency
-    ST7735_PWCTR4 ,  // 10: Power control, 2 args, no delay:
-      0x018A,                   //     BCLK/2, Opamp current small & Medium low
-      0x012A,  
-    ST7735_PWCTR5 ,  // 11: Power control, 2 args, no delay:
-      0x018A, 
-      0x01EE,
-    ST7735_VMCTR1 ,  // 12: Power control, 1 arg, no delay:
-      0x010E,
-    ST7735_INVOFF ,  // 13: Don't invert display, no args, no delay
-    ST7735_MADCTL ,  // 14: Memory access control (directions), 1 arg:
-      ST7735_ROTATION,        //     row addr/col addr, bottom to top refresh
-    ST7735_COLMOD ,  // 15: set color mode, 1 arg, no delay:
-      0x0105 ,                 //     16-bit color
-  ST7735_CASET  ,  //  1: Column addr set, 4 args, no delay:
-      0x0100, 
-      0x0100,             //     XSTART = 0
-      0x0100, 
-      0x017F,             //     XEND = 127
-    ST7735_RASET  ,  //  2: Row addr set, 4 args, no delay:
-      0x0100, 
-      0x0100,             //     XSTART = 0
-      0x0100, 
-      0x017F,            //     XEND = 127 // 31 Init for 7735R, part 3 (red or green tab)
-    ST7735_GMCTRP1, //  1: Gamma Adjustments (pos. polarity), 16 args, no delay:
-      0x0102, 
-      0x011c, 
-      0x0107, 
-      0x0112,
-      0x0137, 
-      0x0132, 
-      0x0129, 
-      0x012d,
-      0x0129, 
-      0x0125, 
-      0x012B, 
-      0x0139,
-      0x0100, 
-      0x0101, 
-      0x0103, 
-      0x0110,
-    ST7735_GMCTRN1, //  2: Gamma Adjustments (neg. polarity), 16 args, no delay:
-      0x0103, 
-      0x011d, 
-      0x0107, 
-      0x0106,
-      0x012E, 
-      0x012C, 
-      0x0129, 
-      0x012D,
-      0x012E, 
-      0x012E, 
-      0x0137, 
-      0x013F,
-      0x0100, 
-      0x00, 
-      0x02, 
-      0x10,
-    ST7735_NORON  , //  3: Normal display on, no args, w/delay
-    ST7735_DISPON //  4: Main screen turn on, no args w/delay
-    };
+
 /*
 
  A3 CS OUT
@@ -106,19 +18,89 @@ static inline void rstSet(uint8_t high);
 
 /*----------- Public Functions -----------*/
 
+
 void Screen_Init(void) {
-    //config();
     // HW reset
     rstSet(0);
     delay_ms(5);
     rstSet(1);
     delay_ms(50);
 
-    // Drive CS for the whole init sequence to avoid glitches
     csSet(0);
-    WriteCommand(init_cmd,sizeofinit);
-    csSet(1);
 
+    WriteCommand_8b(ST7735_SWRESET);
+    delay_ms(150);
+
+    WriteCommand_8b(ST7735_SLPOUT);
+    delay_ms(500);
+
+    WriteCommand_8b(ST7735_FRMCTR1); // Frame rate ctrl - normal mode
+    Screen_WriteData((uint8_t[]){0x01, 0x2C, 0x2D}, 3);
+
+    WriteCommand_8b(ST7735_FRMCTR2); // Frame rate ctrl - idle mode
+    Screen_WriteData((uint8_t[]){0x01, 0x2C, 0x2D}, 3);
+
+    WriteCommand_8b(ST7735_FRMCTR3); // Frame rate ctrl - partial mode
+    Screen_WriteData((uint8_t[]){0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D}, 6);
+
+    WriteCommand_8b(ST7735_INVCTR); // Display inversion ctrl
+    Screen_WriteData((uint8_t[]){0x07}, 1); // No inversion
+
+    WriteCommand_8b(ST7735_PWCTR1); // Power control
+    Screen_WriteData((uint8_t[]){0xA2, 0x02, 0x84}, 3); // -4.6V, AUTO mode
+
+    WriteCommand_8b(ST7735_PWCTR2); // Power control
+    Screen_WriteData((uint8_t[]){0xC5}, 1); // VGH25=2.4C VGSEL=-10 VGH=3*AVDD
+
+    WriteCommand_8b(ST7735_PWCTR3); // Power control
+    Screen_WriteData((uint8_t[]){0x0A, 0x00}, 2); // Opamp current small, boost freq
+
+    WriteCommand_8b(ST7735_PWCTR4); // Power control
+    Screen_WriteData((uint8_t[]){0x8A, 0x2A}, 2); // BCLK/2, Opamp current small & medium low
+
+    WriteCommand_8b(ST7735_PWCTR5); // Power control
+    Screen_WriteData((uint8_t[]){0x8A, 0xEE}, 2);
+
+    WriteCommand_8b(ST7735_VMCTR1); // Power control
+    Screen_WriteData((uint8_t[]){0x0E}, 1);
+
+    WriteCommand_8b(ST7735_INVOFF); // Don't invert display
+
+    WriteCommand_8b(ST7735_MADCTL); // Memory access control
+    Screen_WriteData((uint8_t[]){ST7735_ROTATION}, 1);
+
+    WriteCommand_8b(ST7735_COLMOD); // Color mode
+    Screen_WriteData((uint8_t[]){0x05}, 1); // 16-bit color
+
+    WriteCommand_8b(ST7735_CASET); // Column addr set
+    Screen_WriteData((uint8_t[]){0x00, 0x00, 0x00, 0x7F}, 4); // XSTART=0, XEND=127
+
+    WriteCommand_8b(ST7735_RASET); // Row addr set
+    Screen_WriteData((uint8_t[]){0x00, 0x00, 0x00, 0x7F}, 4); // YSTART=0, YEND=127
+
+    WriteCommand_8b(ST7735_GMCTRP1); // Gamma Adjustments (pos. polarity)
+    Screen_WriteData((uint8_t[]){
+        0x02, 0x1c, 0x07, 0x12,
+        0x37, 0x32, 0x29, 0x2d,
+        0x29, 0x25, 0x2B, 0x39,
+        0x00, 0x01, 0x03, 0x10
+    }, 16);
+
+    WriteCommand_8b(ST7735_GMCTRN1); // Gamma Adjustments (neg. polarity)
+    Screen_WriteData((uint8_t[]){
+        0x03, 0x1d, 0x07, 0x06,
+        0x2E, 0x2C, 0x29, 0x2D,
+        0x2E, 0x2E, 0x37, 0x3F,
+        0x00, 0x00, 0x02, 0x10
+    }, 16);
+
+    WriteCommand_8b(ST7735_NORON); // Normal display on
+    delay_ms(10);
+
+    WriteCommand_8b(ST7735_DISPON); // Main screen turn on
+    delay_ms(100);
+
+    csSet(1);
 }
 
 
