@@ -8,6 +8,21 @@
 This README documents how to use the ST7735 driver: initialization, public API, parameters, return values, possible error conditions, and example usage. It also outlines a midterm project concept built on this driver.
 
 ## Getting Started
+
+| Pin LCD | STM32F411 | Función |
+|---|---|---|
+| VCC | 3.3V | Alimentación |
+| GND | GND | Tierra |
+| CS | PA2 | Chip Select LCD |
+| RESET | PA3  | Reset LCD |
+| DC | PA4  | Data/Command |
+| SCK | PA5 | SPI Clock |
+| SDI (MOSI) | PA7 | SPI MOSI |
+| SDO (MISO) | PA6 | SPI MISO |
+| LED | 3.3V | Backlight |
+
+---
+
 - **Wiring (STM32F446 → TFT)**
 	- `PA2` → `CS`
 	- `PA3` → `RST`
@@ -19,7 +34,9 @@ This README documents how to use the ST7735 driver: initialization, public API, 
 - **Clocking**: SPI1 runs at ~1 MHz (`BR=011` → fPCLK/16). Adjust in `confSPI()` if needed.
 - **Screen geometry**: `SCREEN_WIDTH=128`, `SCREEN_HEIGHT=160`. Color format: RGB565 (16‑bit).
 
-<img width="455" height="426" alt="image" src="https://github.com/user-attachments/assets/02238954-98d0-43d0-8b1d-4c7b9a146606" />
+![alt text](src/README/image-2.png)
+Full Duplex Master SPI is used; the driver handles DC and CS via GPIO. The library supports both ST7735 and ILI9341 displays; select the target by defining `ST7735` or `ILI9341` in `TFT_Screen.h`.
+
 
 ## Initialization
 The constructor configures RCC, GPIO, and SPI via `config()`. Call `INIT_FN()` once to reset and send the full ST7735 init sequence.
