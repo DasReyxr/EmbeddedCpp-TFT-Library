@@ -4,7 +4,7 @@
 
 \begin{document}
 
-\title[Article Title]{TFT Screen Library ST7735 (SPI Version)}
+\title[Article Title]{TFT Screen Library ST7735}
 
 \author*[1,2]{\fnm{Contreras R} \sur{Orlando}}\email{\{al348390,al464376\}@edu.uaa.mx}
 \author*[1,2]{\fnm{Lara H} \sur{Kevin}}
@@ -104,7 +104,7 @@ Should be considered the following specifications for the ST7735 screen, the vol
     \centering
     \includegraphics[width=0.85\linewidth]{MIPI/Timing.png}
     \caption{Timing Constraints}
-    \label{fig:placeholder}
+    \label{fig:Cons}
 \end{figure}
 
 \begin{table}[!h]
@@ -368,6 +368,61 @@ uint16_t init_cmd[] = {
 };
 \end{lstlisting}
 \newpage
+\section{XPT2046 Touch Controller}
+For the touch functionality, the XPT2046 controller is used. It communicates with the host microcontroller via SPI and provides accurate touch position data. The controller supports 12-bit resolution for both X and Y coordinates, allowing for precise touch detection.
+
+\subsection{Control Byte}
+We could request the touch position by sending a control byte to the XPT2046. The control byte format is as follows:
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\linewidth]{srcs/XPT2046.png}
+    \caption{XPT2046}
+    \label{fig:XPT2046}
+\end{figure}
+With changing A2-A0 we could request the X or Y position, with the followiing table we could see what we could request with the control byte
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=\linewidth]{src/A2A0.png}
+    \caption{Input Configuration (DIN), Differential Reference Mode (SER/DFR low)}
+    \label{fig:A2A0}
+\end{figure}
+$$
+\begin{cases}
+    Y-Position:  & [A2:A0] = 001 \\
+    X-Position:  & [A2:A0] = 101 \\
+    Z1-Position: & [A2:A0] = 011 \\
+    Z2-Position: & [A2:A0] = 100 
+\end{cases}
+$$
+We also could set the PD0 and PD1 bits to set the power down mode, with the following table we could see the different modes. In this case we are going to use the mode 00, which is the power down mode with internal reference off, and the internal reference is used for the conversion.
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=\linewidth]{src/PD0.png}
+    \caption{Power-Down and Internal Reference Selection}
+    \label{fig:PD0}
+\end{figure}
+There is also a bit called SER/DFR, which is used to set the differential or single-ended reference mode, in this case we are going to use the differential reference mode, which is the most accurate mode.
+So finally we are going to build our control byte with the following configuration:
+\begin{itemize}
+    \item Mode = 0 (12-bit resolution)
+    \item SER/$\overline{\text{DFR}}$ = 0 (Differential Reference Mode)
+    \item PD1 = 0 (Power Down Mode with Internal Reference Off)
+    \item PD0 = 0 (Power Down Mode with Internal Reference Off)
+\end{itemize}
+\begin{table}[!h]
+	\centering
+	\caption{Control Byte}
+	\begin{tabular}{cccccccc|c|c}
+		S & A2 & A1 & A0 & MODE & SER/DFR & PD1 & PD0 & Hex & Request\\ 
+        \hline
+		1 & 0 & 0 & 1 & 0 & 0 & 0 & 0&0x90 & Y-Position\\ 
+		1 & 1 & 0 & 1 & 0 & 0 & 0 & 0&0xD0 & X-Position\\ 
+		1 & 0 & 1 & 1 & 0 & 0 & 0 & 0&0xB0 & Z1-Position\\ 
+		1 & 1 & 0 & 0 & 0 & 0 & 0 & 0&0xC0 & Z2-Position\\ 
+	\end{tabular}
+\end{table}
+
+\newpage
 \section{Description}
 The library for the ST7735-based TFT display provides a simple and efficient interface for handling graphics through the SPI communication protocol. 
 
@@ -452,7 +507,6 @@ DC & PA4 & Data/Command select (GPIO) \\
 RST & PA6 & Hardware reset (GPIO) \\
 \hline
 \label{tab:con}
-\caption{Connections}
 \end{tabular}
 \end{center}
 Optional: connect a variable analog signal (e.g. potentiometer wiper) to \texttt{PA0} for the oscilloscope demo (ADC input).

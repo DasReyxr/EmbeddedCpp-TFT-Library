@@ -38,7 +38,7 @@ static const GpioPin ScreenRST = {
 #define SCREEN_CASET   0x002A
 #define SCREEN_RASET   0x002B
 #define SCREEN_RAMWR   0x002C
-#define ST7735
+#define ILI9341
 
 
 #ifdef ILI9341

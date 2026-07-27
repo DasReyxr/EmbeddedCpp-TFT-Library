@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "TFT_Screen.h"
+#include "TOUCH_Screen.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
