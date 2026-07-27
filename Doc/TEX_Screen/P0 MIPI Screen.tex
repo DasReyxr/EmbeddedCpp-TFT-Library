@@ -1,195 +1,110 @@
-\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}% Math and Physical Sciences Numbered
-
-
+ \documentclass[pdflatex,sn-mathphys-num]{sn-jnl}% Math and Physical Sciences Numbered
 
 \input{generalconfig.tex}
 
-
-
 \begin{document}
 
-
-
-\title[Article Title]{TFT Screen Library (SPI Version)}
-
+\title[Article Title]{TFT Screen Library ST7735 (SPI Version)}
 
 \author*[1,2]{\fnm{Contreras R} \sur{Orlando}}\email{\{al348390,al464376\}@edu.uaa.mx}
-
 \author*[1,2]{\fnm{Lara H} \sur{Kevin}}
-
 
 \affil[3]{\orgdiv{Department of Electronic Systems}, \orgname{UAA}, \orgaddress{\street{Av. Universidad 940}, \city{Aguascalientes}, \postcode{20131}, \state{Aguascalientes}, \country{México}}}
 
-
-
 %%==================================%%
-
 %% Sample for unstructured abstract %%
-
 %%==================================%%
-
-
 
 \abstract{The objective of this TFT$\_$LCD screen driver is implement an easy way to show info on a screen. This is very useful in embedded systems applications, like show images, text, or anything that requires a screen.}
-
 %% me dices si ocupas ayuda con algo ire a desyunar oki probecho
-
 %%================================%%
-
 %% Sample for structured abstract %%
-
 %%================================%%
-
-
 
 \keywords{ARM, C++, Driver, TFT Screen.}
 
-
-
 %%\pacs[JEL Classification]{D8, H51}
 
-
-
 %%\pacs[MSC Classification]{35A01, 65L10, 65L12, 65L20, 65L70}
-
-
 
 \maketitle
 
 
-
-
-
 \section{Introduction}\label{sec1}
-
 Communication protocols are very useful in a lot of tech applications; all computers, micro controllers, and every circuit with a processor need communication protocols to send or receive I/O data and control external peripherals, some of the most used protocols are SPI. Using this application, the ST7735 TFT screen is a device able to print pixels on a point-matrix, sending via SPI the column and row address to set the internal screen pointer on the pixel that we want to turn on, subsequently we send the color data of this pixel in the color format RGB565.  
 
 
-
-
-
 \subsection{RGB565}
-
 The RGB565 color format is a 16-bit representation of colors, where 5 bits are used for red, 6 bits for green, and 5 bits for blue. This allows for a total of 65,536 different colors. The format is structured as follows:
-
 \begin{figure}[!h]
-
     \centering
-
     \includegraphics[width=0.5\linewidth]{MIPI/RGB565.png}
-
     \caption{RGB Format}
-
-    \label{fig:rgb565}
-
+    \label{fig:placeholder}
 \end{figure}
-
-
 
 Here we got the pink color on RGB565 format (0xF81F), the red color (0xF800), the green color (0x07E0), and the blue color (0x001F), while on RGB888 the pink color is (0xFF00FF), the red color (0xFF0000), the green color (0x00FF00), and the blue color (0x0000FF). 
-
 Therefore we could get the conversion from RGB888 to RGB565 using the following formula:
 
-
-
 \begin{figure}[!h]
-
     \centering
-
     \includegraphics[width=0.8\linewidth]{MIPI/RGB565Conv.png}
-
-    \caption{RGB565 Conversion Formula}
-
-    \label{fig:rgb565conv}
-
+    \caption{Conversion}
+    \label{fig:placeholder}
 \end{figure}
-
 \begin{equation}
 RGB565 = ((R \& 0xF8) << 8) | ((G \& 0xFC) << 3) | (B >> 3)
 \end{equation}
-
 If we didnt had the colors itselfs, we could use the following formula to get the RGB565 color from the RGB888 color:
-
 \begin{equation}
 RGB565 = (((RGB888 \& 0xf80000)>>8) + ((RGB888\&0xfc00)>>5) + ((RGB888\&0xf8)>>3));
 \end{equation}
-
 \begin{figure}
-
     \centering
-
     \includegraphics[width=0.8\linewidth]{MIPI/RGBConversion.png}
-
-    \caption{RGB Color Conversion Process}
-
-    \label{fig:rgbconversion}
-
+    \caption{Enter Caption}
+    \label{fig:placeholder}
 \end{figure}
-
 %https://barth-dev.de/about-rgb565-and-how-to-convert-into-it/
-
 %https://chipsncode.com/tools/rgb565-colour-reference/
-
 %https://rgbcolorpicker.com/565
 
+\section{ST7735}\section{ST7735 Interface Architecture}
 
-
-\section{ST7735}
-
-
-
-\begin{figure}
-
-    \centering
-
-    \includegraphics[width=0.5\linewidth]{MIPI/Considerations.png}
-
-    \caption{ST7735 Interface Considerations}
-
-    \label{fig:Cons}
-
-\end{figure}
-
-
-
-The screen ST7735 handles two interfaces
-
+The ST7735 controller is highly versatile and supports both serial and parallel communication interfaces to interact with the host microcontroller. The selection of the interface is typically determined by the hardware configuration of the IM[2:0] pins on the display module. The primary interfaces supported are:
 \begin{itemize}
-
-    \item 3-Line/9-bit Serial interface (CS (Chip Select), SCL (Signal Clock), SDA (Serial Data Input/Output)) 
-
-    \item 4-Line/8-bit Serial interface (CS (Chip Select), SCL (Signal Clock), SDA (Serial Data Input/Output), D/CX (Data/Command Flag))
-
+    \item \textbf{Parallel Interface:} 8-bit, 9-bit, 16-bit, or 18-bit 8080-series MCU parallel interface.
+    \item \textbf{Serial Interface:} 3-line / 9-bit SPI and 4-line / 8-bit SPI.
 \end{itemize}
 
-We could switch between them with s
+\subsection{Serial Interface Configurations}
+The serial interface reduces the pin count drastically. The screen handles two serial modes, controllable via internal settings or configuration pins:
+\begin{itemize}
+    \item 3-Line/9-bit Serial interface (CS (Chip Select), SCL (Signal Clock), SDA (Serial Data Input/Output)) 
+    \item 4-Line/8-bit Serial interface (CS (Chip Select), SCL (Signal Clock), SDA (Serial Data Input/Output), D/CX (Data/Command Flag))
+\end{itemize}
+We could switch between them with the $SPI4W$ register configuration:
 $$
 \begin{cases}
     SPI4W = 0 & \text{(3-Line Serial interface)} \\
     SPI4W = 1 & \text{(4-Line Serial interface)}
 \end{cases}
 $$
+
 \begin{figure}[!h]
-
     \centering
-
     \includegraphics[width=0.7\linewidth]{MIPI/3Lines.png}
-
-    \caption{3-Line and 4-Line Serial Interface}
-
-    \label{fig:3lines}
-
+    \caption{Serial Interface Timing Diagram}
+    \label{fig:serial_timing_diag}
 \end{figure}
-
-
 \subsection{Time and Voltage Considerations}
 Should be considered the following specifications for the ST7735 screen, the voltage levels and the time of the signals, as shown in figure \ref{fig:Cons}. We take the VDDI voltage as 3.3V same as VDD.
 
 \begin{figure}[!h]
     \centering
-    \includegraphics[width=0.5\linewidth]{MIPI/Timing.png}
+    \includegraphics[width=0.85\linewidth]{MIPI/Timing.png}
     \caption{Timing Constraints}
-    \label{fig:timing}
+    \label{fig:placeholder}
 \end{figure}
 
 \begin{table}[!h]
@@ -219,55 +134,115 @@ Should be considered the following specifications for the ST7735 screen, the vol
                      & TOH & Output disable time & & 50 & ns \\ \hline
 \end{tabular}
 \end{table}
+\subsection{Parallel 8080 MCU Interface}
+The 8080-series parallel interface is designed for high-throughput applications where SPI bandwidth becomes a bottleneck. It utilizes a bi-directional data bus along with control signals to accomplish asynchronous data transfers. 
 
+Depending on the hardware pin strap selection, the data bus can be configured to different bit-widths ($D[17:0]$). For standard microcontrollers, an 8-bit parallel bus is most common. The control lines involved in the 8080 parallel mode are described below:
+\begin{itemize}
+    \item \textbf{CSX (Chip Select):} Enables communication when held low (\texttt{LOW}).
+    \item \textbf{D/CX (Data/Command Select):} Determines if the transfer is a command/status or display data. Held \texttt{LOW} for commands and \texttt{HIGH} for data parameters.
+    \item \textbf{WRX (Write Strobe):} A rising edge on this active-low signal latches the data from the host MCU MCU bus ($D[x:0]$) into the ST7735 internal registers.
+    \item \textbf{RDX (Read Strobe):} A rising edge on this active-low signal drives internal display data or status registers out onto the MCU data bus.
+    \item \textbf{D[17:0] or D[7:0] (Data Bus):} Bi-directional parallel lines used to transfer data packets.
+\end{itemize}
+
+Compared to SPI, where each pixel requires 16 sequential clock cycles on a single line, the 8-bit 8080 parallel interface can transfer a full RGB565 pixel in just two write cycles (one byte per strobe), significantly reducing CPU overhead and maximizing frame rates.
+
+\subsection{Function Description}
 \begin{table}[!h]
-\centering
-\caption{Parallel 8080-Series MCU Interface Characteristics}
-\label{tab:parallel_8080_interface}
-\begin{tabular}{|l|l|l|c|c|c|}
-\hline
-\textbf{Signal} & \textbf{Symbol} & \textbf{Parameter} & \textbf{MIN} & \textbf{MAX} & \textbf{Unit} \\ \hline
-\multirow{2}{*}{D/CX} & AST & Address setup time & 0 & & ns \\ 
-                      & AHT & Address hold time (Write/Read) & 10 & & ns \\ \hline
-\multirow{3}{*}{CSX} & CHW & Chip select ``H'' pulse width & 0 & & ns \\ 
-                     & CSXN & Chip select setup time (Write) & 15 & & ns \\ 
-                     & CSRN & Chip select setup time (Read ID) & 45 & & ns \\ \hline
-\multirow{3}{*}{WRX} & TWC & Write cycle & 66 & & ns \\ 
-                     & WRH & Write Control ``H'' pulse width & 15 & & ns \\ 
-                     & WRL & Write Control ``L'' pulse width & 15 & & ns \\ \hline
-\multirow{3}{*}{RDX (ID)} & TRCFM & Read cycle (FM) & 450 & & ns \\ 
-                         & RDHFM & Read Control ``H'' pulse width (FM) & 90 & & ns \\ 
-                         & RDLFM & Read Control ``L'' pulse width (FM) & 355 & & ns \\ \hline
-\multirow{4}{*}{D[17:0]} & DST & Data setup time & 10 & & ns \\ 
-                         & DHT & Data hold time & 10 & & ns \\ 
-                         & RAT & Read access time (FM) & & 340 & ns \\ 
-                         & ODH & Output disable time & 20 & 80 & ns \\ \hline
-\end{tabular}
+    \centering
+    \begin{tabular}{l|l|l|l|l}
+        \hline 
+         IM2 & IM1 & IM0 & Interface & Read Back Selection  \\
+         \hline
+         0 & - & - & 3-line serial interface & Via the read instruction\\
+         1 & 0 & 0 & 8080 MCU 8-bit parallel & RDX strobe (8-bit read data and 8-bit read parameter)\\
+         1 & 0 & 1 & 8080 MCU 16-bit parallel & RDX strobe (16-bit read data and 8-bit read parameter)\\
+         1 & 1 & 0 & 8080 MCU 9-bit parallel & RDX strobe (9-bit read data and 8-bit read parameter)\\
+         1 & 1 & 1 & 8080 MCU 18-bit parallel & RDX strobe (18-bit read data and 8-bit read parameter)\\
+ 
+    \end{tabular}
+    \caption{Selection of MCU Interface}
+    \label{tab:placeholder}
 \end{table}
 
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{l|l|l|l|l|l|l|l|l}
+        \hline 
+         IM2 & IM1 & IM0 & Interface & RDX & WRX & D/CX & Read back selection  \\
+         \hline
+         0 & - & - & 3-line serial        & Note1 &Note1 &Note1 & D[17:1]: unused D0: SDA\\
+         1 & 0 & 0 & 8080 8-bit parallel  & RDX   & WRX  & D/CX & D[17:8]: unused D7-D0: 8 bit data \\
+         1 & 0 & 1 & 8080 16-bit parallel & RDX   & WRX  & D/CX & D[17:16]: unused D15-D0: 16 bit data\\
+         1 & 1 & 0 & 8080 9-bit parallel  & RDX   & WRX  & D/CX & D[17:9]: unused D8-D0: 9 bit data\\
+         1 & 1 & 1 & 8080 18-bit parallel & RDX   & WRX  & D/CX & D17-D0: 18 bit data\\
+ 
+    \end{tabular}
+    \caption{Selection of MCU Interface}
+    \label{tab:placeholder}
+\end{table}
+Note1: Unused pins can be open or connected to DGND or VDDI
 
+In this document we are going to use the \textbf{3-Line serial} (IM2,IM1,IM0 = "0xx")
+\subsection{Color Frame}
+We could control the color frame bits by modifying the COLMOD Register. The COLMOD Register could take four possible values by loading values after 3Ah
 
-\section{Description}
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l}
+        \hline 
+         COLMOD & Frame & RGB & Colors\\
+         \hline
+         011 & 12-bit  & 444 & 4k\\
+         101 & 16-bit  & 565 & 65k \\
+         110 & 18-bit  & 666 & 262k\\
+         111 & No used & N/A& N/a\\
+         \hline
+    \end{tabular}
+    \caption{Selection of MCU Interface}
+    \label{tab:placeholder}
+\end{table}
+We are going to use the 565 Frame, therefore the Write data cycle would be the shown on the next figure
 
-The library for the ST7735-based TFT display provides a simple and efficient interface for handling graphics through the SPI communication protocol. 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{MIPI/565Frame.png}
+    \caption{Write cycle for 565}
+    \label{fig:placeholder}
+\end{figure}
 
+\subsection{Data Streaming Order}
+There are two modes of Panel Resolution
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l}
+        \hline 
+         GM2 & GM1 & GM0 & Panel Resolution\\
+         \hline
+         0 & 0  & 0 & 132RGB x 162\\
+         0 & 1  & 1 & 128RGB x 160\\
+         \hline
+    \end{tabular}
+    \caption{Selection of MCU Interface}
+    \label{tab:placeholder}
+\end{table}
+With the register (MADCTL) Memory Data Access Control we could control multiple configurations of the screen
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{MIPI/MADCTL.png}
+    \caption{MADCTL Register}
+    \label{fig:placeholder}
+\end{figure}
 
+We could set the orientation by modifying the MV, MX, MY bits. The MV exchanges x and y axis, MX and MY flips the X and Y axis, respectively. Note that the stream begins from B (Begin) and goes to E (End) 
 
-This library abstracts the complexity of the command sequences and internal operation of the ST7735, offering intuitive functions to initialize the display, print color rectangles,fill the creen with one color, draw pixels, and test the colors on the screen, each one integrated on a 4 simple function to use:
-
-
-
-Screen1.FillScreen(color).
-
-
-
-Screen1.FillRectangle(posx, posy, width, height, color).
-
-
-
-Screen1.DrawPixel(posyx, posy, color).
-test(void);
-
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{MIPI/Orientation.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
 \subsection{Gamma Adjustments (Positive and Negative Polarity)}
 The ST7735 controller features highly customizable Gamma Correction registers (\texttt{ST7735\_GMCTRP1} for positive polarity and \texttt{ST7735\_GMCTRN1} for negative polarity). In Liquid Crystal Displays (LCDs), gamma correction is not merely a software tool for contrast styling, but a critical hardware requirement to compensate for the non-linear electro-optical transfer characteristics of the liquid crystal layer.
 
@@ -293,8 +268,23 @@ The 16 hexadecimal parameters passed to each gamma register block represent spec
 In practical driver development, these values are \textbf{empirically determined by the display module manufacturer}. The screen vendor utilizes specialized optical instrumentation (such as colorimeters and spectrophotometers) to measure the luminance response across the grayscale spectrum on a bare glass panel panel sample. 
 
 The factory engineers then calculate the exact DAC voltage offsets required to match standard target curves (typically a Gamma 2.2 profile, which matches human visual perception). The resulting magic numbers—such as the ones embedded in our \texttt{init\_cmd[]} array—are hardcoded into the initialization routine to ensure accurate color reproduction, stable grayscale transitions, and identical luminance across both positive and negative driving cycles.
+\newpage
+\subsection{Registers}
+Finally, here we got all the registers
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{MIPI/REG1.png}
+    \includegraphics[width=0.8\linewidth]{MIPI/REG2.png}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
 
-\section{Initialization Sequence}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{MIPI/REG3.png}
+    
+\end{figure}
+\subsection{Initialization Sequence}
 The following array contains the configuration sequence for the ST7735R controller. To distinguish between commands and data control packets within the bare-metal driver, a \texttt{0x0100} prefix mask is applied to metadata parameters, while direct commands maintain their hardware definitions.
 
 \begin{lstlisting}[
@@ -312,294 +302,196 @@ The following array contains the configuration sequence for the ST7735R controll
     showstringspaces=false
 ]
 uint16_t init_cmd[] = {
-    // Init for 7735R, part 1 (red or green tab)
     ST7735_SWRESET, // 1: Software reset, 0 args, w/delay
     ST7735_SLPOUT , // 2: Out of sleep mode, 0 args, w/delay
     ST7735_FRMCTR1, // 3: Frame rate ctrl - normal mode, 3 args:
-    0x0101,         //    Argument 1: RTNA setting
-    0x012C,         //    Argument 2: FPA setting
-    0x012D,         //    Argument 3: BPA setting. Rate = fosc/(1x2+40) * (LINE+2C+2D)
+    0x0101,         //    Arg 1: RTNA setting
+    0x012C,         //    Arg 2: FPA setting
+    0x012D,         //    Arg 3: BPA setting. Rate = fosc/(1x2+40) * (LINE+2C+2D)
     ST7735_FRMCTR2, // 4: Frame rate control - idle mode, 3 args:
-    0x0101,         //    Argument 1: RTNB setting
-    0x012C,         //    Argument 2: FPB setting
-    0x012D,         //    Argument 3: BPB setting. Rate = fosc/(1x2+40) * (LINE+2C+2D)
+    0x0101,         //    Arg 1: RTNB setting
+    0x012C,         //    Arg 2: FPB setting
+    0x012D,         //    Arg 3: BPB setting. Rate = fosc/(1x2+40) * (LINE+2C+2D)
     ST7735_FRMCTR3, // 5: Frame rate ctrl - partial mode, 6 args:
-    0x0101,         //    Argument 1: RTNC setting
-    0x012C,         //    Argument 2: FPC setting
-    0x012D,         //    Argument 3: BPC setting (Dot inversion mode)
-    0x0101,         //    Argument 4: RTNC setting 
-    0x012C,         //    Argument 5: FPC setting
-    0x012D,         //    Argument 6: BPC setting (Line inversion mode)
+    0x0101,         //    Arg 1: RTNC setting
+    0x012C,         //    Arg 2: FPC setting
+    0x012D,         //    Arg 3: BPC setting (Dot inversion mode)
+    0x0101,         //    Arg 4: RTNC setting 
+    0x012C,         //    Arg 5: FPC setting
+    0x012D,         //    Arg 6: BPC setting (Line inversion mode)
     ST7735_INVCTR , // 6: Display inversion ctrl, 1 arg, no delay:
-    0x0107,         //    Argument 1: No inversion (Line inversion on full/idle/partial)
+    0x0107,         //    Arg 1: No inversion (Line inversion on full/idle/partial)
     ST7735_PWCTR1 , // 7: Power control, 3 args, no delay:
-    0x01A2,         //    Argument 1: GVDD setup
-    0x0102,         //    Argument 2: VCI1 / VGH / VGL setup (-4.6V)
-    0x0184,         //    Argument 3: Opamp bias selection (AUTO mode)
+    0x01A2,         //    Arg 1: GVDD setup
+    0x0102,         //    Arg 2: VCI1 / VGH / VGL setup (-4.6V)
+    0x0184,         //    Arg 3: Opamp bias selection (AUTO mode)
     ST7735_PWCTR2 , // 8: Power control, 1 arg, no delay:
-    0x01C5,         //    Argument 1: VGH25 = 2.4C, VGSEL = -10, VGH = 3 * AVDD
+    0x01C5,         //    Arg 1: VGH25 = 2.4C, VGSEL = -10, VGH = 3 * AVDD
     ST7735_PWCTR3 , // 9: Power control, 2 args, no delay:
-    0x010A,         //    Argument 1: Opamp current small (Normal mode)
-    0x0100,         //    Argument 2: Boost frequency (Normal mode)
+    0x010A,         //    Arg 1: Opamp current small (Normal mode)
+    0x0100,         //    Arg 2: Boost frequency (Normal mode)
     ST7735_PWCTR4 , // 10: Power control, 2 args, no delay:
-    0x018A,         //    Argument 1: BCLK/2, Opamp current small & Medium low (Idle)
-    0x012A,         //    Argument 2: Boost frequency (Idle mode)
+    0x018A,         //    Arg 1: BCLK/2, Opamp current small & Medium low (Idle)
+    0x012A,         //    Arg 2: Boost frequency (Idle mode)
     ST7735_PWCTR5 , // 11: Power control, 2 args, no delay:
-    0x018A,         //    Argument 1: Opamp current and boost (Partial mode)
-    0x01EE,         //    Argument 2: Boost frequency (Partial mode)
+    0x018A,         //    Arg 1: Opamp current and boost (Partial mode)
+    0x01EE,         //    Arg 2: Boost frequency (Partial mode)
     ST7735_VMCTR1 , // 12: Power control, 1 arg, no delay:
-    0x010E,         //    Argument 1: VCOM voltage setting
+    0x010E,         //    Arg 1: VCOM voltage setting
     ST7735_INVOFF , // 13: Don't invert display, no args, no delay
     ST7735_MADCTL , // 14: Memory access control (directions), 1 arg:
-    ST7735_ROTATION,//    Argument 1: Row/Col address scan, bottom to top refresh
+    ST7735_ROTATION,//    Arg 1: Row/Col address scan, bottom to top refresh
     ST7735_COLMOD , // 15: Set color mode, 1 arg, no delay:
-    0x0105 ,        //    Argument 1: 16-bit color format (RGB565)
+    0x0105 ,        //    Arg 1: 16-bit color format (RGB565)
     ST7735_CASET  , // 16: Column addr set, 4 args, no delay:
-    0x0100,         //    Argument 1: XSTART high byte
-    0x0100,         //    Argument 2: XSTART low byte = 0
-    0x0100,         //    Argument 3: XEND high byte
-    0x017F,         //    Argument 4: XEND low byte = 127
+    0x0100,         //    Arg 1: XSTART high byte
+    0x0100,         //    Arg 2: XSTART low byte = 0
+    0x0100,         //    Arg 3: XEND high byte
+    0x017F,         //    Arg 4: XEND low byte = 127
     ST7735_RASET  , // 17: Row addr set, 4 args, no delay:
-    0x0100,         //    Argument 1: YSTART high byte
-    0x0100,         //    Argument 2: YSTART low byte = 0
-    0x0100,         //    Argument 3: YEND high byte
-    0x017F,         //    Argument 4: YEND low byte = 127
-    ST7735_GMCTRP1, // 18: Gamma Adjustments (pos. polarity), 16 args, no delay:
-    0x0102, 0x011c, 0x0107, 0x0112, // Arguments 1 to 4: Curve mapping
-    0x0137, 0x0132, 0x0129, 0x012d, // Arguments 5 to 8: Curve mapping
-    0x0129, 0x0125, 0x012B, 0x0139, // Arguments 9 to 12: Curve mapping
-    0x0100, 0x0101, 0x0103, 0x0110, // Arguments 13 to 16: Curve mapping
-    ST7735_GMCTRN1, // 19: Gamma Adjustments (neg. polarity), 16 args, no delay:
-    0x0103, 0x011d, 0x0107, 0x0106, // Arguments 1 to 4: Curve mapping
-    0x012E, 0x012C, 0x0129, 0x012D, // Arguments 5 to 8: Curve mapping
-    0x012E, 0x012E, 0x0137, 0x013F, // Arguments 9 to 12: Curve mapping
-    0x0100, 0x0100, 0x0102, 0x0110, // Arguments 13 to 16: Curve mapping
+    0x0100,         //    Arg 1: YSTART high byte
+    0x0100,         //    Arg 2: YSTART low byte = 0
+    0x0100,         //    Arg 3: YEND high byte
+    0x017F,         //    Arg 4: YEND low byte = 127
+    ST7735_GMCTRP1, // 18: Gamma Adj (+ pol), 16 args, no delay:
+    0x0102, 0x011c, 0x0107, 0x0112, // Args 1 to 4: Curve map
+    0x0137, 0x0132, 0x0129, 0x012d, // Args 5 to 8: Curve map
+    0x0129, 0x0125, 0x012B, 0x0139, // Args 9 to 12: Curve map
+    0x0100, 0x0101, 0x0103, 0x0110, // Args 13 to 16: Curve map
+    ST7735_GMCTRN1, // 19: Gamma Adj (- pol), 16 args, no delay:
+    0x0103, 0x011d, 0x0107, 0x0106, // Args 1 to 4: Curve map
+    0x012E, 0x012C, 0x0129, 0x012D, // Args 5 to 8: Curve map
+    0x012E, 0x012E, 0x0137, 0x013F, // Args 9 to 12: Curve map
+    0x0100, 0x0100, 0x0102, 0x0110, // Args 13 to 16: Curve map
     ST7735_NORON  , // 20: Normal display on, no args, w/delay
     ST7735_DISPON   // 21: Main screen turn on, no args w/delay
 };
 \end{lstlisting}
+\newpage
+\section{Description}
+The library for the ST7735-based TFT display provides a simple and efficient interface for handling graphics through the SPI communication protocol. 
+
+This library abstracts the complexity of the command sequences and internal operation of the ST7735, offering intuitive functions to initialize the display, print color rectangles,fill the creen with one color, draw pixels, and test the colors on the screen, each one integrated on a 4 simple function to use:
+
+Screen1.FillScreen(color).
+
+Screen1.FillRectangle(posx, posy, width, height, color).
+
+Screen1.DrawPixel(posyx, posy, color).
+
+test(void);
 
 \section{Purpose}
-
 This library aims to support rapid development of visual interfaces, diagnostic screens, and real-time graphical outputs, offering a set of functions optimized for performance and compatibility with a wide range of microcontrollers. It is designed to serve both beginners and advanced users who require a practical and flexible tool to integrate TFT graphics into their projects.
 
-
-
 \section{How to use properly}
-
 This section explains how to integrate and use the ST7735 TFT driver and the oscilloscope demo on an STM32F446 MCU.
 
-
-
 \subsection{Driver Initialization}
-
 \begin{enumerate}
-
     \item Instantiate the driver object (constructor calls low-level \texttt{config()} for RCC/GPIO/SPI).
-
     \item Call \texttt{INIT\_FN()} once after reset to send the ST7735 init sequence.
-
     \item Clear or paint the screen using \texttt{FillScreen(color)}.
-
 \end{enumerate}
-
 Example:
-
 \begin{verbatim}
-
 TFT_ST7735 tft;
-
 tft.INIT_FN();
-
 tft.FillScreen(COLOR_BLACK);
-
 \end{verbatim}
 
-
-
 \subsection{Drawing Primitives}
-
 \begin{itemize}
-
     \item Pixel: \verb|DrawPixel(x, y, color)|
-
     \item Rectangle: \verb|FillRectangle(x, y, w, h, color)| (auto clipping)
-
     \item Full screen: \verb|FillScreen(color)|
-
     \item Text: \verb|WriteChar(x, y, ch, font, fg, bg)| and \verb|WriteString(x, y, str, font, fg, bg)|
-
 \end{itemize}
-
 Colors use RGB565; predefined constants (\verb|COLOR_RED|, \verb|COLOR_BLUE|, etc.) live in the header.
 
-
-
 \subsection{Oscilloscope Demo Flow}
-
 Provided in \texttt{main\_osc.cpp}:
-
 \begin{enumerate}
-
     \item Configure PLL and system clock via \texttt{conf\_osc()}.
-
     \item Enable and start continuous conversion on ADC1 channel at \texttt{PA0}.
-
     \item Initialize TFT and draw axes using rectangles.
-
     \item In loop: read \verb|ADC1->DR|, scale value (\verb|>>5|) to horizontal pixel range, increment vertical time index, plot with \verb|DrawPixel()|.
-
     \item When vertical index reaches bottom, clear plot region and restart for a scrolling effect.
-
 \end{enumerate}
-
-
 
 \subsection{Build Notes}
-
 The code uses bare-metal register access (no HAL). Ensure your linker script and startup file match STM32F446. SPI baud is set to fPCLK/16. If the display shows nothing, verify wiring and that HSE/PLL configuration succeeds.
 
-
-
 \subsection{Testing}
-
 \begin{enumerate}
-
     \item Power the board and TFT (3.3V only).
-
     \item Flash firmware containing either \texttt{main\_tst.cpp} (color test) or \texttt{main\_osc.cpp} (oscilloscope).
-
     \item For oscilloscope: vary the analog input on PA0 (potentiometer or waveform source) and observe horizontal deflection of the cyan trace.
-
 \end{enumerate}
-
-
-
 
 
 \section{Diagram}
-
-In figure \ref{fig:sq} the test circuit with the test code printing multiple rectangles, notice that the connections are in table \ref{tab:con}.
-
-
+In the figure \ref{fig:sq} the test circuit with the test code printing multiple rectangles, notice that the connections are in the table \ref{tab:con}.
 
 \begin{figure}[!h]
-
     \centering
-
     \includegraphics[width=0.5\linewidth]{MIPI/Esquematico.png}
-
     \caption{Schematic}
-
     \label{fig:sq}
-
 \end{figure}
 
-
-
-\begin{table}[!h]
-\centering
-\caption{TFT to STM32F446 Pin Connections}
-\label{tab:con}
+\begin{center}
 \begin{tabular}{|c|c|c|}
-
 \hline TFT Pin & STM32F446 Pin & Purpose \\
-
 \hline VCC & 3.3V & Power \\
-
 GND & GND & Ground \\
-
 SCK & PA5 & SPI1 SCK (AF5) \\
-
 MOSI & PA7 & SPI1 MOSI (AF5) \\
-
 CS & PA3 & Chip Select (GPIO) \\
-
 DC & PA4 & Data/Command select (GPIO) \\
-
 RST & PA6 & Hardware reset (GPIO) \\
-
 \hline
-
+\label{tab:con}
+\caption{Connections}
 \end{tabular}
-\end{table}
-
+\end{center}
 Optional: connect a variable analog signal (e.g. potentiometer wiper) to \texttt{PA0} for the oscilloscope demo (ADC input).
 
-
-
 \section{Limitations and Enhancements}
-
 \subsection{Current Limitations}
-
 \begin{itemize}
-
     \item \textbf{Polling SPI}: All transfers busy-wait; CPU cannot perform other tasks concurrently.
-
     \item \textbf{No DMA}: Large area fills and waveform plotting are slower than possible; higher CPU usage.
-
     \item \textbf{Fixed Rotation}: Only one memory access orientation initialized; no runtime rotation switching.
-
     \item \textbf{Limited Primitives}: Lines, circles, bitmaps, and sprites are not yet implemented.
-
     \item \textbf{No Text Clipping}: Long strings may draw off-screen without wrapping or truncation.
-
     \item \textbf{Oscilloscope Scaling}: Simple right-shift scaling (\verb|>>5|) reduces resolution; no trigger or persistence.
-
     \item \textbf{Blocking Clear}: Screen clear for oscilloscope resets full plot; no partial scrolling buffer.
-
 \end{itemize}
-
-
 
 \subsection{Potential Enhancements}
-
 \begin{itemize}
-
     \item \textbf{SPI DMA + Interrupts}: Offload pixel bursts; increase frame throughput.
-
     \item \textbf{Drawing Toolkit}: Add line (Bresenham), circle (Midpoint), bitmap blitting, and gradient fills.
-
     \item \textbf{Runtime Rotation}: Implement MADCTL updates with offset correction and cached clipping.
-
     \item \textbf{Text System}: Clipping region, wrapping, proportional fonts, and transparency support.
-
     \item \textbf{Waveform Features}: Trigger modes (edge/level), adjustable vertical/horizontal scaling, persistence with ring buffer.
-
     \item \textbf{Double Buffering}: Compose frames off-screen then push for flicker-free updates.
-
     \item \textbf{UI Layer}: Basic widgets (labels, value bars, status icons) for sensor dashboards.
-
     \item \textbf{Color/Theme Profiles}: Map amplitude ranges to color gradients (heatmap visualization).
-
 \end{itemize}
 
-
-
 \subsection{Recommended Next Steps}
-
 Prioritize DMA integration and trigger logic for oscilloscope, then expand primitive set and text handling to support richer UI applications (data logger, multi-channel monitor).
 
-
-
  
-
 \begin{itemize}
-
 \item Configure SPI in master (one board) and slave (other board) mode. 
-
 \item Configure UART on both boards for terminal output text (Putty etc). 
-
 \item Define and use two control commands over SPI: start and finish. 
-
 \item Implement the count logic (0-9) on the slave, and delay/loop logic on the master. 
-
 \item Print meaningful messages via UART and maintain a cycle counter on the slave
 
-
-
   \end{itemize}
-
-
-
-\end{document} 
+% 
+\end{document}
